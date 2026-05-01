@@ -1,0 +1,15 @@
+__pycache__/
+.idea/
+dataset/
+checkpoints/
+checkpoints_otw/
+checkpoints_nc2023/
+logs/
+
+*.pyc
+*.pth
+*.npy
+*.zip
+*.png
+
+服务器.txt
