@@ -1,0 +1,7 @@
+*.py text eol=lf
+*.md text eol=lf
+.gitignore text eol=lf
+.gitattributes text eol=lf
+
+# Preserve raw SWAP regression fixtures byte-for-byte and keep reviews compact.
+site_general_surrogate_eval/three_output_balance_audit_p1_20240716_server_v1/** -text -diff

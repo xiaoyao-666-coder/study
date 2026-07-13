@@ -1,0 +1,45 @@
+# Python caches and local environments
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.venv/
+venv/
+
+# Large imported runtime and source-data bundles
+/model3_opt_sto_upload/
+/model3_opt_sto_upload.zip
+/rtist_minimal_work/
+
+# Generated experiment and report artifacts
+/site_general_surrogate_eval/
+/report_artifacts/
+/teacher_persite_expert_evidence_pack_*/
+/logs/
+
+# Models, arrays, geospatial/weather data, and executables
+*.pkl
+*.joblib
+*.pth
+*.pt
+*.npy
+*.npz
+*.tif
+*.tiff
+*.nc
+*.grib
+*.grib2
+*.exe
+*.dll
+*.so
+
+# Local papers and office exports
+*.pdf
+*.docx
+*.xls
+*.xlsx
+
+# Runtime logs and archives
+*.log
+*.zip
+*.tar
+*.tar.gz
