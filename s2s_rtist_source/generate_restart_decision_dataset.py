@@ -22,16 +22,19 @@ import pandas as pd
 
 import ForecastStep
 import real_ir_update
+from restart_raw_audit_v1 import preserve_candidate_raw_outputs
 from swap_three_output_labels_v1 import (
     extract_candidate_labels,
     flatten_candidate_labels,
     inclusive_horizon_end_doy,
+    patch_nprintday_text,
 )
 
 
 YEAR = 2024
 START_DOY = 61
 HORIZON_DAYS = 7
+RESTART_NPRINTDAY = 24
 
 DECISION_DATES = [
     ("16-Jul-2024", 198),
@@ -183,7 +186,8 @@ def set_swp_for_restart(decision_doy: int, end_doy: int, outfil: str) -> None:
             lines[i + 1] = f"     2       {crop_start}    {crop_end}   'mais'    'gmaized'      2\n"
             break
 
-    Path(SWP_FILE).write_text("".join(lines), encoding="utf-8")
+    swp_text = patch_nprintday_text("".join(lines), RESTART_NPRINTDAY)
+    Path(SWP_FILE).write_text(swp_text, encoding="utf-8")
 
 
 def configure_irrigation(date_t: str, irrigation_mm: float | None) -> None:
@@ -280,6 +284,14 @@ def run_one_date(date_t: str, decision_doy: int, irrigation_options_mm: list[flo
                 restart_increment_path=Path("result_restart.inc"),
                 decision_date=date_t,
                 horizon_days=HORIZON_DAYS,
+                nprintday=RESTART_NPRINTDAY,
+            )
+            raw_audit_dir = preserve_candidate_raw_outputs(
+                date_t=date_t,
+                decision_doy=decision_doy,
+                irrigation_mm=ir,
+                irrigation_options_mm=irrigation_options,
+                nprintday=RESTART_NPRINTDAY,
             )
             rows.append(
                 {
@@ -288,6 +300,16 @@ def run_one_date(date_t: str, decision_doy: int, irrigation_options_mm: list[flo
                     "horizon_end_doy": end_doy,
                     "horizon_days": HORIZON_DAYS,
                     "ir": ir,
+                    "swap_version": "4.0.1",
+                    "water_depth_unit": "mm",
+                    "flux_rate_source_unit": "cm/day",
+                    "root_depth_unit": "cm",
+                    "soil_vwc_0_100cm_unit": "cm3/cm3",
+                    "control_volume_type": "fixed_0_100cm",
+                    "control_depth_cm": 100.0,
+                    "data_processing_spec_version": "three_output_surrogate_data_processing_spec_v1_fixed_0_100cm",
+                    "raw_audit_preserved": int(raw_audit_dir is not None),
+                    "raw_audit_dir": str(raw_audit_dir) if raw_audit_dir else "",
                     **read_last("result_restart.crp"),
                     **flatten_candidate_labels(physical_labels),
                 }

@@ -60,16 +60,21 @@ def flatten_candidate_labels(
     flat = dict(labels.summary)
     daily_fields = {
         "root_depth_cm": "root_depth_day{day:02d}_cm",
-        "rootzone_vwc": "rootzone_vwc_day{day:02d}",
-        "rootzone_storage_mm": "rootzone_storage_day{day:02d}_mm",
+        "soil_vwc_0_100cm": "soil_vwc_0_100cm_day{day:02d}",
+        "soil_storage_0_100cm_mm": "soil_storage_0_100cm_day{day:02d}_mm",
         "tact_mm": "tact_day{day:02d}_mm",
         "eact_mm": "eact_day{day:02d}_mm",
         "interc_mm": "interc_day{day:02d}_mm",
         "aet_mm": "aet_day{day:02d}_mm",
         "runoff_mm": "runoff_day{day:02d}_mm",
-        "root_drainage_mm": "root_drainage_day{day:02d}_mm",
-        "root_boundary_flux_mm": "root_boundary_flux_day{day:02d}_mm",
-        "root_boundary_depth_cm": "root_boundary_depth_day{day:02d}_cm",
+        "soil_drainage_0_100cm_mm": "soil_drainage_0_100cm_day{day:02d}_mm",
+        "soil_boundary_waterflux_100cm_signed_mm": (
+            "soil_boundary_waterflux_100cm_signed_day{day:02d}_mm"
+        ),
+        "soil_boundary_outflow_100cm_mm": (
+            "soil_boundary_outflow_100cm_day{day:02d}_mm"
+        ),
+        "soil_boundary_depth_cm": "soil_boundary_depth_day{day:02d}_cm",
     }
     for day, row in enumerate(labels.daily.to_dict(orient="records"), start=1):
         for source, template in daily_fields.items():
@@ -81,6 +86,12 @@ def inclusive_horizon_end_doy(decision_doy: int, horizon_days: int) -> int:
     if horizon_days <= 0:
         raise ValueError("horizon_days must be positive")
     return int(decision_doy) + int(horizon_days) - 1
+
+
+def patch_nprintday_text(text: str, nprintday: int) -> str:
+    from rootzone_flux_frequency_diagnostic_v1 import patch_nprintday_text as impl
+
+    return impl(text, nprintday)
 
 
 def _read_swap_csv(path: Path, header_name: str) -> pd.DataFrame:
@@ -184,121 +195,71 @@ def extract_candidate_labels(
     restart_increment_path: Path,
     decision_date: str,
     horizon_days: int = 7,
+    nprintday: int = 24,
 ) -> CandidateLabels:
-    start = pd.Timestamp(decision_date).normalize()
-    dates = [(start + pd.Timedelta(days=offset)).strftime("%Y-%m-%d") for offset in range(horizon_days)]
+    from rootzone_flux_frequency_diagnostic_v1 import analyze_case_outputs
 
-    increments = _read_swap_csv(Path(restart_increment_path), "Date")
-    increments["Date"] = pd.to_datetime(
-        increments["Date"].astype(str).str.strip()
-    ).dt.strftime("%Y-%m-%d")
-    increments = increments[increments["Date"].isin(dates)].copy()
-    increments = increments.set_index("Date").reindex(dates).reset_index()
-    if increments["Day"].isna().any():
-        missing = increments.loc[increments["Day"].isna(), "Date"].tolist()
-        raise RuntimeError(f"Missing increment rows for dates: {missing}")
-    for column in [
-        "Rain",
-        "Snow",
-        "Irrig",
-        "Interc",
-        "Runon",
-        "Runoff",
-        "Tact",
-        "Eact",
-        "Drainage",
-        "QBottom",
-        "dstorage",
-        "baldev",
-    ]:
-        increments[column] = pd.to_numeric(increments[column], errors="coerce")
-
-    pre_crop = _read_crop_table(Path(pre_crop_path))
-    pre_profile = _read_profile_table(Path(pre_profile_path))
-    pre_dates = sorted(date for date in pre_profile["date"].unique() if date < dates[0])
-    if not pre_dates:
-        raise RuntimeError("Missing pre-decision profile date")
-    pre_date = pre_dates[-1]
-    pre_root_depth = _root_depth_for_date(pre_crop, pre_date)
-    pre_metrics = _rootzone_metrics(
-        pre_profile[pre_profile["date"] == pre_date], pre_root_depth
+    result = analyze_case_outputs(
+        pre_crop_path=Path(pre_crop_path),
+        pre_profile_path=Path(pre_profile_path),
+        restart_crop_path=Path(restart_crop_path),
+        restart_profile_path=Path(restart_profile_path),
+        restart_increment_path=Path(restart_increment_path),
+        decision_date=decision_date,
+        nprintday=nprintday,
+        horizon_days=horizon_days,
+        control_depth_cm=100.0,
     )
-
-    restart_crop = _read_crop_table(Path(restart_crop_path))
-    restart_profile = _read_profile_table(Path(restart_profile_path))
-    daily_rows: list[dict[str, float | str]] = []
-    for date in dates:
-        root_depth = _root_depth_for_date(restart_crop, date)
-        metrics = _rootzone_metrics(
-            restart_profile[restart_profile["date"] == date], root_depth
-        )
-        flux = increments.loc[increments["Date"] == date].iloc[0]
-        tact_mm = 10.0 * float(flux["Tact"])
-        eact_mm = 10.0 * float(flux["Eact"])
-        interc_mm = 10.0 * float(flux["Interc"])
-        daily_rows.append(
-            {
-                "date": date,
-                **metrics,
-                "rain_mm": 10.0 * float(flux["Rain"]),
-                "snow_mm": 10.0 * float(flux["Snow"]),
-                "irrigation_mm": 10.0 * float(flux["Irrig"]),
-                "interc_mm": interc_mm,
-                "runon_mm": 10.0 * float(flux["Runon"]),
-                "runoff_mm": 10.0 * float(flux["Runoff"]),
-                "tact_mm": tact_mm,
-                "eact_mm": eact_mm,
-                "aet_mm": tact_mm + eact_mm + interc_mm,
-                "profile_drainage_mm": 10.0 * float(flux["Drainage"]),
-                "profile_qbottom_mm": 10.0 * float(flux["QBottom"]),
-                "profile_dstorage_mm": 10.0 * float(flux["dstorage"]),
-                "profile_baldev_mm": 10.0 * float(flux["baldev"]),
-            }
-        )
-    daily = pd.DataFrame(daily_rows)
-
-    delta_storage = float(daily.iloc[-1]["rootzone_storage_mm"]) - float(
-        pre_metrics["rootzone_storage_mm"]
-    )
-    residual_flux = float(
-        daily["runoff_mm"].sum()
-        + daily["root_drainage_mm"].sum()
-        + daily["root_boundary_flux_mm"].sum()
-    )
-    water_balance_residual = float(
-        daily["rain_mm"].sum()
-        + daily["snow_mm"].sum()
-        + daily["irrigation_mm"].sum()
-        + daily["runon_mm"].sum()
-        - daily["aet_mm"].sum()
-        - residual_flux
-        - delta_storage
-    )
-    summary: dict[str, float | int | str] = {
-        "horizon_days_actual": int(len(daily)),
-        "horizon_start_date": dates[0],
-        "horizon_end_date": dates[-1],
-        "predecision_date": pre_date,
-        "predecision_root_depth_cm": pre_root_depth,
-        "predecision_rootzone_vwc": float(pre_metrics["rootzone_vwc"]),
-        "predecision_rootzone_storage_mm": float(
-            pre_metrics["rootzone_storage_mm"]
+    daily = result.daily.rename(
+        columns={
+            "rootzone_vwc": "soil_vwc_0_100cm",
+            "rootzone_storage_mm": "soil_storage_0_100cm_mm",
+            "root_drainage_mm": "soil_drainage_0_100cm_mm",
+            "root_boundary_flux_mm": (
+                "soil_boundary_waterflux_100cm_signed_mm"
+            ),
+            "root_boundary_outflow_mm": "soil_boundary_outflow_100cm_mm",
+            "root_boundary_depth_cm": "soil_boundary_depth_cm",
+        }
+    ).drop(columns=["moving_root_boundary_term_mm"])
+    summary = dict(result.summary)
+    summary_renames = {
+        "root_drainage_7d_mm": "soil_drainage_0_100cm_7d_mm",
+        "root_boundary_signed_integral_mm": (
+            "soil_boundary_waterflux_100cm_signed_7d_mm"
         ),
-        "rain_7d_mm": float(daily["rain_mm"].sum()),
-        "snow_7d_mm": float(daily["snow_mm"].sum()),
-        "irrigation_7d_mm": float(daily["irrigation_mm"].sum()),
-        "runon_7d_mm": float(daily["runon_mm"].sum()),
-        "tact_7d_mm": float(daily["tact_mm"].sum()),
-        "eact_7d_mm": float(daily["eact_mm"].sum()),
-        "interc_7d_mm": float(daily["interc_mm"].sum()),
-        "aet_7d_mm": float(daily["aet_mm"].sum()),
-        "runoff_7d_mm": float(daily["runoff_mm"].sum()),
-        "root_drainage_7d_mm": float(daily["root_drainage_mm"].sum()),
-        "root_boundary_flux_7d_mm": float(
-            daily["root_boundary_flux_mm"].sum()
+        "root_boundary_outflow_7d_mm": "soil_boundary_outflow_100cm_7d_mm",
+        "predecision_rootzone_vwc": "predecision_soil_vwc_0_100cm",
+        "predecision_rootzone_storage_mm": (
+            "predecision_soil_storage_0_100cm_mm"
         ),
-        "residual_flux_7d_mm": residual_flux,
-        "delta_rootzone_storage_7d_mm": delta_storage,
-        "water_balance_residual_7d_mm": water_balance_residual,
+        "final_rootzone_storage_mm": "final_soil_storage_0_100cm_mm",
+        "delta_rootzone_storage_7d_mm": "delta_soil_storage_0_100cm_7d_mm",
+        "max_abs_root_boundary_depth_error_cm": (
+            "max_abs_soil_boundary_depth_error_cm"
+        ),
     }
+    for old_name, new_name in summary_renames.items():
+        summary[new_name] = summary.pop(old_name)
+    direct_outflow = float(summary.pop("direct_component_outflow_7d_mm"))
+    fixed_residual = float(summary.pop("water_balance_residual_corrected_7d_mm"))
+    for legacy_name in (
+        "moving_root_boundary_term_7d_mm",
+        "balance_derived_outflow_without_moving_7d_mm",
+        "balance_derived_outflow_with_moving_7d_mm",
+        "water_balance_residual_without_moving_7d_mm",
+    ):
+        summary.pop(legacy_name, None)
+    summary.update(
+        {
+            "control_volume_type": "fixed_0_100cm",
+            "control_depth_cm": 100.0,
+            "horizon_days_actual": int(len(daily)),
+            "horizon_start_date": str(daily.iloc[0]["date"]),
+            "horizon_end_date": str(daily.iloc[-1]["date"]),
+            "predecision_date": str(result.samples.iloc[0]["date"]),
+            "residual_flux_7d_mm": direct_outflow,
+            "water_balance_residual_0_100cm_7d_mm": fixed_residual,
+        }
+    )
     return CandidateLabels(daily=daily, summary=summary)

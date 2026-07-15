@@ -2,7 +2,7 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Build a site-general continuous-irrigation surrogate that predicts 7-day net gain, 7-day actual evapotranspiration, and 7 daily dynamic-root-zone soil-moisture values, then performs label-free physics-only online TTA on 2024 GEFS inputs.
+**Goal:** Build a site-general continuous-irrigation surrogate that predicts 7-day net gain, 7-day actual evapotranspiration, and 7 daily fixed 0-100 cm soil-moisture values, then performs label-free physics-only online TTA on 2024 GEFS inputs.
 
 **Architecture:** Keep the repository's existing flat, versioned-script convention. Extend the restart-based SWAP label generator with reusable parsers for `result_restart.inc`, `result_restart.vap`, and `result_restart.crp`; construct year-separated sequence datasets; train a three-head PyTorch model with supervised and water-balance losses; then adapt the pretrained model sequentially on 2024 using only the physics loss. Irrigation is a differentiable scalar constrained to 0-60 mm and optimized by gradient ascent against predicted net gain, with final decisions evaluated against SWAP oracle curves.
 
@@ -14,7 +14,7 @@
 
 - Output 1: future 7-day net gain.
 - Output 2: future 7-day cumulative actual evapotranspiration.
-- Output 3: future 7-day daily dynamic-root-zone mean volumetric soil moisture.
+- Output 3: future 7-day daily fixed 0-100 cm soil-layer mean volumetric water content.
 - Current SWAP 4.0.1 `result.inc` contains `Tact`, `Eact`, and `Interc`; use `Tact + Eact + Interc` after confirming all three are water-depth increments in cm/day.
 - Irrigation decision variable is continuous and constrained to `[0, 60]` mm.
 - Forecast weather source for 2024 is GEFS.
@@ -22,19 +22,53 @@
 - Pretraining loss: supervised output losses plus physics-consistency loss.
 - TTA loss: physics-consistency loss only; no 2024 SWAP labels may participate in adaptation.
 
-## Blocking Method Questions To Confirm Before Model Training
+## Fixed 0-100 cm Control-Volume Update (2026-07-15)
 
-1. Define the exact water-balance residual. A complete balance requires precipitation, irrigation, interception, runoff, drainage/bottom flux, and storage change. With only net gain, cumulative ET, and soil moisture as reported outputs, runoff and drainage are not currently predicted at TTA time.
-2. Decide whether the physics residual is daily or one 7-day aggregate. A daily residual requires an internal daily ET head even if only cumulative ET is reported.
-3. Decide whether runoff, drainage, and bottom flux will be additional internal auxiliary heads, a single residual-flux head, or omitted under an explicitly approximate root-zone balance.
-4. Fix the GEFS protocol: forecast cycle (recommended 00 UTC), ensemble handling (recommended ensemble mean baseline plus member-spread features), lead-time mapping, accumulated-precipitation differencing, and availability rules for missing cycles.
+The teacher selected a fixed control volume to avoid adding a moving-boundary output head. The follow-up diagnostic supports `0-100 cm`: all audited maize configurations use `RDC=100 cm`, the profile has an exact boundary at 100 cm, and the dynamic N2 sample closes at `-0.1590 mm` when recomputed over fixed 0-100 cm without a moving-boundary term.
 
-Do not begin bulk label regeneration or final model training until these four definitions are written into the experiment configuration.
+This changes the meaning of Output 3. It is `soil_vwc_0_100cm_daily`, not dynamic-root-zone VWC. Daily root depth remains an input/state feature because early in the season part of the fixed layer is not yet accessible to the crop. Dynamic-root calculations and their moving-boundary term remain in the audit layer only. Detailed evidence is in `site_general_surrogate_eval/fixed_0_100cm_control_volume_validation_2026-07-15.md`.
+
+## Root-Zone Water-Balance Audit Update (2026-07-13)
+
+The following points are now confirmed and supersede earlier assumptions in this plan:
+
+- SWAP native vertical-flux sign is positive upward and negative downward.
+- `result_restart.vap` reports instantaneous `waterflux` and `drainage` rates in `cm/day`.
+- The current `NPrintDay=1` extraction is a one-day rectangle-rule approximation, not a direct cumulative-flux output.
+- Fixed-root samples currently audited match the root depth to an exact compartment-top boundary.
+- Dynamic-root samples require an explicit moving-control-volume term, `10 * integral(theta(R(t), t), dR(t))`.
+- The approved frequency diagnostic completed on 2026-07-14. At `NPrintDay=24`, the two fixed-root C2 residuals were `-0.1555 mm` and `-0.1393 mm`; the N2 dynamic-root residual changed from `-58.3264 mm` to `0.0986 mm` after adding a `58.4250 mm` moving-boundary term.
+
+Detailed evidence and current values are recorded in `site_general_surrogate_eval/three_output_rootzone_water_balance_audit_2026-07-13.md`.
+
+The completed bounded diagnostic used:
+
+```text
+code_C2 / 16-Jul-2024 / 30 mm
+code_C2 / 16-Jul-2024 / 60 mm
+code_N2 / 15-May-2024 / 30 mm
+NPrintDay = 1, 4, 24
+```
+
+The two C2 samples tested fixed-root temporal integration. The N2 sample tested temporal integration plus the moving-root-boundary term. No model training or bulk data generation was performed. `NPrintDay=1` was inadequate, `NPrintDay=4` did not consistently converge, and the teacher formally adopted `NPrintDay=24` for production and the next multi-site smoke.
+
+## Evidence-Supported Method Decisions Before Model Training
+
+The water-balance method questions are resolved:
+
+1. Use the directly integrated physical outflow as the supervised residual-flux target.
+2. Use the fixed 0-100 cm control volume for formal model labels and physics loss; it has no moving-boundary term.
+3. Calculate and store the moving-boundary term only in the retained dynamic-root audit branch.
+4. Use production `NPrintDay=24`, actual-`Time` trapezoidal integration, native SWAP flux sign through integration, and `Dcum` aggregation for subdaily increments.
+
+The GEFS feasibility review completed on 2026-07-14. The evidence-supported protocol uses a 06:00 local decision cutoff and same-date 00 UTC cycle; keeps all 31 members as separate surrogate scenarios; maps `D` through `D+6` using IANA site timezones; reconstructs precipitation from GRIB `startStep/endStep` rather than blind adjacent differencing; and falls back the entire ensemble, not individual members, by at most 24 hours. The mean-weather input is retained only as an ablation. A 5-site, 10-cycle `geavg` diagnostic completed on 2026-07-15: daily precipitation bias was `-0.0303 mm`, but 7-day precipitation MAE was `10.4145 mm`, with dry/light precipitation overestimated and moderate/heavy precipitation underestimated. This supports retaining member scenarios as the primary method. See `site_general_surrogate_eval/gefs_protocol_feasibility_evidence_2026-07-14.md` and `site_general_surrogate_eval/gefs_gridmet_bias_validation_analysis_2026-07-15.md`.
+
+The formal `NPrintDay=24` multi-site smoke has passed. Do not begin bulk GEFS preparation or final model training until an automated preflight verifies every required 2024 date, all 31 members, required variables, and `f003-f180`, followed by a one-date GEFS extraction smoke.
 
 ## File Map
 
 - Modify: `generate_restart_decision_dataset.py` - extract three-output and water-balance labels immediately after every SWAP candidate run.
-- Create: `swap_three_output_labels_v1.py` - reusable SWAP output parsers and dynamic-root-zone aggregation.
+- Create: `swap_three_output_labels_v1.py` - reusable SWAP output parsers, fixed 0-100 cm aggregation, and retained dynamic-root audit calculations.
 - Create: `audit_swap_three_output_labels_v1.py` - one-site/one-date audit with independent balance checks.
 - Create: `prepare_gefs_site_forecasts_v1.py` - GEFS download/index, unit conversion, site extraction, and daily windows.
 - Create: `build_three_output_surrogate_dataset_v1.py` - merge SWAP labels, static features, history, actual-weather windows, and GEFS windows.
@@ -65,7 +99,7 @@ Use the following schema after the blocking questions are resolved:
   "outputs": {
     "net_gain_7d": {"shape": [1], "unit": "USD/ha"},
     "aet_daily": {"shape": [7], "unit": "mm/day", "reported_as": "sum_7d"},
-    "rootzone_vwc_daily": {"shape": [7], "unit": "cm3/cm3"}
+    "soil_vwc_0_100cm_daily": {"shape": [7], "unit": "cm3/cm3"}
   },
   "aet_components": ["Tact", "Eact", "Interc"],
   "split": {"train": [2015, 2016, 2017, 2018], "validation": [2019], "test_tta": [2024]},
@@ -90,32 +124,34 @@ Expected: PASS only when the physics equation and GEFS protocol are explicit.
 - Create: `audit_swap_three_output_labels_v1.py`
 - Test: `tests/test_swap_three_output_labels_v1.py`
 
-- [ ] **Step 1: Write parser tests using small committed text fixtures**
+- [x] **Step 1: Write parser tests using small committed text fixtures**
 
 Test that `result.inc` parses daily `Tact`, `Eact`, `Interc`, storage change, runoff, drainage, bottom flux, and `baldev`; convert cm to mm exactly once.
 
-- [ ] **Step 2: Implement daily AET extraction**
+- [x] **Step 2: Implement daily AET extraction**
 
 ```python
 def actual_et_mm(frame: pd.DataFrame) -> pd.Series:
     return 10.0 * (frame["Tact"] + frame["Eact"] + frame["Interc"])
 ```
 
-- [ ] **Step 3: Implement dynamic-root-zone VWC extraction**
+- [x] **Step 3: Implement fixed 0-100 cm VWC extraction**
 
-For each of the seven days, read daily root depth from `result_restart.crp`, select `result_restart.vap` compartments intersecting `[0, root_depth]`, weight `wcontent` by intersected compartment thickness, and return one mean VWC per day. Handle the partially intersected bottom compartment rather than dropping it.
+For each of the seven days, select `result_restart.vap` compartments intersecting `[0, 100 cm]`, weight `wcontent` by intersected compartment thickness, and return one fixed-layer mean VWC per day. Keep daily root depth as an input/audit field. Retain the existing dynamic-root calculation only as an audit branch.
 
-- [ ] **Step 4: Verify parser consistency**
+- [x] **Step 4: Verify parser consistency**
 
 Run: `pytest tests/test_swap_three_output_labels_v1.py -v`
 
 Expected: all parser, unit, partial-layer, and seven-day-shape tests PASS.
 
-- [ ] **Step 5: Run a one-site/one-date SWAP audit**
+- [x] **Step 5: Run a one-site/one-date SWAP audit**
 
-The audit CSV must show the seven daily ET values, seven root-zone VWC values, cumulative ET, start/end storage, each balance term, SWAP `baldev`, and independently reconstructed residual.
+The audit CSV must show the seven daily ET values, seven fixed 0-100 cm VWC values, cumulative ET, fixed-layer start/end storage, each balance term, SWAP `baldev`, and independently reconstructed residual. A dynamic-root comparison may be retained as an audit-only table.
 
 Acceptance: no missing day; VWC remains in physical bounds; reconstructed residual agrees with SWAP `baldev` within the documented tolerance.
+
+Completed locally with the retained P1 0 mm and 30 mm raw outputs. Both candidates passed the fixed-schema validator; 131 fields were produced, no legacy `rootzone` or moving-boundary fields remained, and the maximum absolute balance residual was `0.1171495 mm` at the historical `NPrintDay=1` audit frequency.
 
 ### Task 3: Extend Restart Label Generation
 
@@ -123,7 +159,7 @@ Acceptance: no missing day; VWC remains in physical bounds; reconstructed residu
 - Modify: `generate_restart_decision_dataset.py:249`
 - Test: `tests/test_swap_three_output_labels_v1.py`
 
-- [ ] **Step 1: Write a failing integration test for one candidate row**
+- [x] **Step 1: Write a failing integration test for one candidate row**
 
 Require these new fields:
 
@@ -131,22 +167,24 @@ Require these new fields:
 net_gain_7d
 aet_7d_mm
 aet_day01_mm ... aet_day07_mm
-rootzone_vwc_day01 ... rootzone_vwc_day07
+soil_vwc_0_100cm_day01 ... soil_vwc_0_100cm_day07
 root_depth_day01_cm ... root_depth_day07_cm
 water_balance_residual_day01_mm ... water_balance_residual_day07_mm
 ```
 
-- [ ] **Step 2: Parse outputs immediately after each candidate run**
+- [x] **Step 2: Parse outputs immediately after each candidate run**
 
 At `generate_restart_decision_dataset.py:268`, parse `result_restart.inc`, `result_restart.vap`, and `result_restart.crp` before the next irrigation candidate overwrites them.
 
-- [ ] **Step 3: Preserve a small audit subset of raw SWAP files**
+- [x] **Step 3: Preserve a small audit subset of raw SWAP files**
 
 Keep raw outputs for at least one zero-irrigation and one nonzero-irrigation candidate per site/year. Store paths in the manifest; avoid copying every large profile file unless required for reproducibility.
 
-- [ ] **Step 4: Run a five-site smoke generation**
+- [x] **Step 4: Run a five-site fixed 0-100 cm smoke generation**
 
 Acceptance: every candidate has exactly seven valid AET and VWC values, irrigation lies in `[0, 60]`, and all units are recorded in the manifest.
+
+Completed on 2026-07-15 with 5 sites, 1 decision date, and 8 irrigation candidates per site. All 40 candidates passed the fixed-schema validator; all control depths were 100 cm, no legacy `rootzone` or moving-boundary formal fields remained, and the maximum absolute balance residual was `0.308267 mm`. The dynamic-root branch remains covered by the separate N2 diagnostic. See `site_general_surrogate_eval/three_output_fixed_0_100cm_npd24_5site_smoke_results_2026-07-15.md`.
 
 ### Task 4: Build GEFS 2024 Forecast Inputs
 
@@ -154,13 +192,13 @@ Acceptance: every candidate has exactly seven valid AET and VWC values, irrigati
 - Create: `prepare_gefs_site_forecasts_v1.py`
 - Test: `tests/test_gefs_site_forecasts_v1.py`
 
-- [ ] **Step 1: Test lead-time and accumulation conversion**
+- [ ] **Step 1: Test lead-time and accumulation-interval conversion**
 
-Use synthetic accumulated precipitation to verify that daily precipitation is obtained by nonnegative differencing across valid forecast steps and is never treated as an instantaneous rate.
+Use synthetic and real-index fixtures to parse `startStep/endStep`, reconstruct non-overlapping precipitation intervals across six-hour reset boundaries, and reject blind adjacent differencing such as `f009-f006`.
 
 - [ ] **Step 2: Implement forecast-cycle selection**
 
-For each decision timestamp, select only the configured GEFS initialization available at that time. Record initialization time, member, lead, valid time, source URL/key, and fallback reason.
+Set the decision timestamp to 06:00 in each site's IANA timezone. Select the same-date 00 UTC cycle only when all 31 members, required variables, and `f003-f180` are complete. If incomplete, fallback the entire ensemble to the previous 00 UTC cycle by at most 24 hours. Record initialization time, object timestamp, member, lead, valid time, source URL/key, checksum/ETag, and fallback reason.
 
 - [ ] **Step 3: Map GEFS variables to the existing SWAP weather schema**
 
@@ -203,7 +241,7 @@ Use identical sample keys and output labels where SWAP oracle evaluation is avai
 
 - [ ] **Step 4: Run leakage and shape checks**
 
-Acceptance: no 2019 or 2024 row contributes to preprocessing statistics; each sample has 7 future weather days, 7 daily VWC targets, 7 daily ET targets, and one net-gain target.
+Acceptance: no 2019 or 2024 row contributes to preprocessing statistics; each sample has 7 future weather days, 7 daily fixed 0-100 cm VWC targets, 7 daily ET targets, and one net-gain target.
 
 ### Task 6: Implement The Three-Output Physics-Constrained Model
 
@@ -219,7 +257,7 @@ Expected model dictionary:
 {
     "net_gain_7d": tensor_of_shape_Bx1,
     "aet_daily": tensor_of_shape_Bx7,
-    "rootzone_vwc_daily": tensor_of_shape_Bx7,
+    "soil_vwc_0_100cm_daily": tensor_of_shape_Bx7,
 }
 ```
 
@@ -323,7 +361,7 @@ paper fixed-list SWAP oracle reference
 
 - [ ] **Step 3: Report output and physics metrics**
 
-Report net-gain error, cumulative/daily ET error, daily root-zone VWC error, and water-balance residual. Stratify by site, date range, DVS/maturity state, GEFS lead day, and irrigation/non-irrigation class.
+Report net-gain error, cumulative/daily ET error, daily fixed 0-100 cm VWC error, and water-balance residual. Stratify by site, date range, DVS/maturity state, root-depth band, GEFS lead day, and irrigation/non-irrigation class.
 
 - [ ] **Step 4: Decide whether event-triggered TTA is justified**
 

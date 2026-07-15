@@ -4,6 +4,7 @@ __pycache__/
 .pytest_cache/
 .venv/
 venv/
+.gefs_validation_deps/
 
 # Large imported runtime and source-data bundles
 /model3_opt_sto_upload/
@@ -11,7 +12,19 @@ venv/
 /rtist_minimal_work/
 
 # Generated experiment and report artifacts
-/site_general_surrogate_eval/
+!/site_general_surrogate_eval/
+/site_general_surrogate_eval/*
+!/site_general_surrogate_eval/three_output_rootzone_water_balance_audit_2026-07-13.md
+!/site_general_surrogate_eval/three_output_rootzone_flux_frequency_validation_results_2026-07-14.md
+!/site_general_surrogate_eval/three_output_rootzone_flux_frequency_validation_summary_2026-07-14.csv
+!/site_general_surrogate_eval/three_output_formal_npd24_5site_smoke_results_2026-07-14.md
+!/site_general_surrogate_eval/three_output_formal_npd24_5site_smoke_summary_2026-07-14.csv
+!/site_general_surrogate_eval/gefs_protocol_feasibility_evidence_2026-07-14.md
+!/site_general_surrogate_eval/gefs_protocol_feasibility_matrix_2026-07-14.csv
+!/site_general_surrogate_eval/gefs_2024_00utc_availability_evidence_2026-07-14.csv
+!/site_general_surrogate_eval/gefs_gridmet_bias_validation_analysis_2026-07-15.md
+!/site_general_surrogate_eval/fixed_0_100cm_control_volume_validation_2026-07-15.md
+!/site_general_surrogate_eval/three_output_fixed_0_100cm_npd24_5site_smoke_results_2026-07-15.md
 /report_artifacts/
 /teacher_persite_expert_evidence_pack_*/
 /logs/

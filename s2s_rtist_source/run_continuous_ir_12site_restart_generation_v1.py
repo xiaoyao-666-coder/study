@@ -28,6 +28,8 @@ DEFAULT_RUN_ROOT = OUT_DIR / "continuous_ir_12site_restart_generation_v1"
 DEFAULT_SITE_FEATURE_CSV = OUT_DIR / "site_feature_screening_12_code_sites.csv"
 GENERATOR_SCRIPT = Path("generate_restart_decision_dataset.py")
 THREE_OUTPUT_LABEL_SCRIPT = Path("swap_three_output_labels_v1.py")
+FLUX_DIAGNOSTIC_SCRIPT = Path("rootzone_flux_frequency_diagnostic_v1.py")
+RAW_AUDIT_SCRIPT = Path("restart_raw_audit_v1.py")
 SITE_PLAN_FILE = "site_sampling_plan.csv"
 REAL_IR_HELPER_CANDIDATES = [
     Path("real_ir_update.py"),
@@ -265,11 +267,22 @@ def copy_generator_files(site_work: Path) -> None:
         raise FileNotFoundError(
             f"Missing three-output label helper: {THREE_OUTPUT_LABEL_SCRIPT}"
         )
+    if not FLUX_DIAGNOSTIC_SCRIPT.exists():
+        raise FileNotFoundError(
+            f"Missing flux diagnostic helper: {FLUX_DIAGNOSTIC_SCRIPT}"
+        )
+    if not RAW_AUDIT_SCRIPT.exists():
+        raise FileNotFoundError(f"Missing raw audit helper: {RAW_AUDIT_SCRIPT}")
     shutil.copyfile(GENERATOR_SCRIPT, site_work / GENERATOR_SCRIPT.name)
     shutil.copyfile(
         THREE_OUTPUT_LABEL_SCRIPT,
         site_work / THREE_OUTPUT_LABEL_SCRIPT.name,
     )
+    shutil.copyfile(
+        FLUX_DIAGNOSTIC_SCRIPT,
+        site_work / FLUX_DIAGNOSTIC_SCRIPT.name,
+    )
+    shutil.copyfile(RAW_AUDIT_SCRIPT, site_work / RAW_AUDIT_SCRIPT.name)
 
     helper_target = site_work / "real_ir_update.py"
     if not helper_target.exists():
