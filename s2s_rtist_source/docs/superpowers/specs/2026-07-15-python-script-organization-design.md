@@ -4,7 +4,7 @@
 
 ## 1. 背景
 
-当前 `s2s_rtist_source` 根目录共有140个Python脚本。Git当前正式跟踪的根级脚本只有9个，其余大多是尚未纳入版本管理的历史实验、数据准备、诊断、训练、评估和可视化脚本。
+当前 `s2s_rtist_source` 根目录共有140个Python脚本。Git当前正式跟踪的根级脚本只有9个，其余大多是尚未纳入版本管理的历史实验、数据准备、诊断、训练、评估和可视化脚本。根目录还存在9个 `.md/.txt` 文件，包括正式服务器说明、历史运行笔记、论文文本摘录、早期复现记录和依赖清单。
 
 这些脚本长期按实验阶段直接堆放在根目录，存在以下问题：
 
@@ -13,6 +13,7 @@
 - 正式流程、一次性诊断和历史复现脚本混在一起；
 - 多个脚本按根目录模块名互相导入，直接移动会破坏运行；
 - 服务器命令和文档依赖具体文件名，重命名后容易失效；
+- 解释文档和依赖清单与脚本混放，文档版本和对应流程不清楚；
 - 新对话或新成员需要全文搜索才能找到入口。
 
 ## 2. 已确认目标
@@ -25,6 +26,8 @@
 6. 增加可搜索的脚本目录和每个分类的Markdown说明。
 7. 统一入口支持快速列出、搜索、查看和运行脚本。
 8. 项目外现有未提交文件不修改、不暂存、不提交。
+9. 根目录原有 `.md/.txt` 文件同步迁移并保留，不删除；解释文档进入 `docs/`，依赖清单进入 `requirements/`。
+10. 统一入口的搜索范围同时覆盖脚本和文档。
 
 ## 3. 采用方案
 
@@ -63,11 +66,25 @@ s2s_rtist_source/
 |       |-- superseded/
 |       |-- one_off/
 |       `-- original_application/
+|-- requirements/
+|   `-- requirements_gefs_gridmet_bias_validation_v1.txt
 |-- tests/
 `-- docs/
+    |-- README.md
+    |-- document_catalog.csv
+    |-- operations/
+    |   `-- server/
+    |-- research/
+    |   `-- reproduction/
+    `-- archive/
+        |-- README.md
+        |-- historical_notes/
+        `-- paper_extracts/
 ```
 
 每个 `scripts/` 分类目录包含一个 `README.md`，说明目录职责、当前推荐脚本、输入输出、版本关系、统一入口ID和已知依赖。
+
+`docs/README.md` 提供文档总导航，`docs/document_catalog.csv` 记录原文件名、当前路径、文档类型、状态、对应脚本和正式引用资格。
 
 ## 5. 正式包职责
 
@@ -178,12 +195,30 @@ current_sha256
 - 未修改内容的脚本必须满足 `source_sha256 == current_sha256`；
 - 因导入调整而修改的脚本必须在目录README中说明。
 
+`docs/document_catalog.csv` 是机器可读的文档目录，至少包含以下字段：
+
+```text
+id
+original_path
+current_path
+document_type
+status
+purpose
+related_script_ids
+formal_reference
+source_sha256
+current_sha256
+```
+
+脚本和文档catalog使用不同ID命名空间，但统一入口的搜索结果必须显示记录类型，避免同名混淆。
+
 ## 9. 统一入口
 
 根目录只保留 `project_cli.py`，支持：
 
 ```text
 python project_cli.py list
+python project_cli.py list --type docs
 python project_cli.py find rootzone
 python project_cli.py show rootzone-frequency
 python project_cli.py run rootzone-frequency -- <原脚本参数>
@@ -191,15 +226,15 @@ python project_cli.py run rootzone-frequency -- <原脚本参数>
 
 ### 9.1 `list`
 
-列出ID、分类、状态和一句话用途。默认优先显示 `formal` 和 `active`，可通过参数显示全部历史脚本。
+列出ID、记录类型、分类、状态和一句话用途。默认优先显示正式和当前脚本，可通过 `--type scripts|docs|all` 及状态参数筛选。
 
 ### 9.2 `find`
 
-在ID、原文件名、当前路径、用途、状态和正式引用中进行不区分大小写的关键词搜索。
+同时在脚本和文档catalog的ID、原文件名、当前路径、用途、状态、关联关系和正式引用中进行不区分大小写的关键词搜索。
 
 ### 9.3 `show`
 
-显示一个脚本的完整目录记录、推荐命令、版本关系和README位置。
+显示一条脚本或文档记录的完整目录信息。脚本记录显示推荐命令、版本关系和README位置；文档记录显示对应脚本、正式引用资格和当前路径。
 
 ### 9.4 `run`
 
@@ -240,8 +275,30 @@ scripts/script_catalog.csv
 - `scripts/archive/README.md`：归档规则和复现注意事项；
 - `scripts/archive/VERSIONS.md`：版本替代关系；
 - 正式包各子目录可使用简短README说明模块职责和公开接口。
+- `docs/README.md`：文档总导航、正式引用入口和历史资料说明；
+- `docs/operations/server/README.md`：服务器运行说明与对应CLI命令；
+- `docs/research/reproduction/README.md`：复现记录及其数据/脚本依赖；
+- `docs/archive/README.md`：历史说明和论文文本摘录的保留规则。
 
 README和catalog必须一致。自动测试以catalog为结构事实来源，README用于人类导航。
+
+### 11.1 根级文档迁移
+
+根目录现有9个 `.md/.txt` 文件按以下规则迁移：
+
+| 原文件 | 目标分类 |
+|---|---|
+| `fixed_0_100cm_5site_smoke_server_run_20260715.md` | `docs/operations/server/` |
+| `formal_npd24_5site_smoke_server_run_20260714.md` | `docs/operations/server/` |
+| `gefs_gridmet_bias_validation_server_run_20260715.md` | `docs/operations/server/` |
+| `first_step_reproduction_notes_2026-05-29.md` | `docs/research/reproduction/` |
+| `server_restart_smoke_notes_2026-05-30.md` | `docs/archive/historical_notes/` |
+| `Instructions.txt` | `docs/archive/historical_notes/` |
+| `paper_keyword_snippets.txt` | `docs/archive/paper_extracts/` |
+| `paper_text_2026ems.txt` | `docs/archive/paper_extracts/` |
+| `requirements_gefs_gridmet_bias_validation_v1.txt` | `requirements/` |
+
+论文全文提取和关键词摘录只作为本地研究资料保留，不自动标记为正式引用来源。依赖清单虽然使用 `.txt` 扩展名，但属于运行配置，因此进入 `requirements/` 而不是 `docs/`。
 
 ## 12. 迁移步骤
 
@@ -251,10 +308,11 @@ README和catalog必须一致。自动测试以catalog为结构事实来源，REA
 4. 迁移正式runner并注册稳定CLI ID。
 5. 按职责迁移其余当前脚本。
 6. 根据明确替代证据移动历史版本和一次性脚本。
-7. 生成完整catalog和版本说明。
-8. 更新项目文档、服务器命令和运行包清单。
-9. 执行结构、语法、导入、单元测试和CLI验证。
-10. 对照迁移前清单确认没有脚本丢失。
+7. 生成完整脚本catalog和版本说明。
+8. 记录根目录9个 `.md/.txt` 文件的原路径、大小和SHA256，并迁移到已确认目录。
+9. 生成文档catalog和文档导航，更新服务器命令、正式交叉引用和运行包清单。
+10. 执行结构、语法、导入、单元测试、文档路径和CLI验证。
+11. 对照迁移前清单确认没有脚本或文档丢失。
 
 迁移过程中不执行删除命令。若目标路径冲突，停止该文件迁移并记录冲突，不覆盖任何文件。
 
@@ -267,6 +325,8 @@ README和catalog必须一致。自动测试以catalog为结构事实来源，REA
 - 正式脚本存在无法解析的本地导入时，测试失败；
 - 历史脚本缺少第三方依赖或旧数据时，在catalog和README中记录，不将其标记为正式可运行；
 - 文档仍引用旧根级脚本命令时，检查失败并列出位置。
+- 文档catalog出现重复ID、缺失路径或遗漏迁移前根级 `.md/.txt` 文件时，测试失败；
+- 正式文档移动后存在失效的相对链接时，检查失败并列出来源文件和目标链接。
 
 ## 14. 测试和验收
 
@@ -277,10 +337,12 @@ README和catalog必须一致。自动测试以catalog为结构事实来源，REA
 - catalog的ID、当前路径和原始路径映射完整且唯一；
 - 所有catalog路径实际存在；
 - 未修改历史脚本的SHA256保持一致。
+- 根目录不再保留迁移前的9个 `.md/.txt` 文件；
+- 9个文件全部可通过文档catalog追溯，未修改文件的SHA256保持一致。
 
 ### 14.2 CLI检查
 
-- `list`、`find`、`show` 正常工作；
+- `list`、`find`、`show` 对脚本和文档都正常工作；
 - 正式ID可以定位并转发 `--help` 或等价的无副作用参数；
 - 未知ID给出清晰错误和相近建议；
 - 子进程退出码正确透传。
@@ -298,6 +360,8 @@ README和catalog必须一致。自动测试以catalog为结构事实来源，REA
 - 正式服务器命令使用CLI稳定ID；
 - 每个分类目录存在README；
 - 每个归档版本族在 `VERSIONS.md` 中可追溯。
+- 根目录迁移的9个说明/配置文件全部出现在 `docs/document_catalog.csv`；
+- 正式文档的相对链接和对应脚本ID有效。
 
 ### 14.5 Git范围检查
 
@@ -311,8 +375,9 @@ README和catalog必须一致。自动测试以catalog为结构事实来源，REA
 
 1. 根目录达到单一入口目标；
 2. 140个原始脚本全部保留且可追溯；
-3. 正式流程导入和CLI入口通过验证；
-4. 现有68项测试和新增结构测试全部通过；
-5. 正式文档和服务器命令已更新；
-6. 每个分类和版本关系都有Markdown说明；
-7. 未将缺数据或缺依赖的历史脚本误报为已运行验证。
+3. 根目录原有9个 `.md/.txt` 文件全部保留且可追溯；
+4. 正式流程导入和CLI入口通过验证；
+5. 现有68项测试和新增结构测试全部通过；
+6. 正式文档、相对链接和服务器命令已更新；
+7. 每个分类和版本关系都有Markdown说明；
+8. 未将缺数据或缺依赖的历史脚本误报为已运行验证。
