@@ -1,0 +1,28 @@
+evidence_group,scope,metric,value,unit,primary_source
+crop_parameter,code_N2 maize,RDI,10,cm,rootzone_flux_frequency_validation_received_20260714/validation_20260714_v2/cases/code_N2_20240515_ir30_npd24/GmaizeDOriginal.crp:366
+crop_parameter,code_N2 maize,RRI,2.2,cm/day,rootzone_flux_frequency_validation_received_20260714/validation_20260714_v2/cases/code_N2_20240515_ir30_npd24/GmaizeDOriginal.crp:367
+crop_parameter,code_N2 maize,RDC,100,cm,rootzone_flux_frequency_validation_received_20260714/validation_20260714_v2/cases/code_N2_20240515_ir30_npd24/GmaizeDOriginal.crp:368
+soil_geometry,code_N2 profile,cumulative_depth_after_first_five_sublayers,100,cm,rootzone_flux_frequency_validation_received_20260714/validation_20260714_v2/cases/code_N2_20240515_ir30_npd24/SwapOriginal.swp:321
+soil_geometry,code_N2 profile,compartment_height_at_100cm_boundary,1,cm,rootzone_flux_frequency_validation_received_20260714/validation_20260714_v2/cases/code_N2_20240515_ir30_npd24/SwapOriginal.swp:321
+n2_fixed_0_100cm,code_N2/2024-05-15/30mm/NPrintDay24,water_input_7d,42.6996,mm,fixed-depth recomputation from result_forec/result_restart files
+n2_fixed_0_100cm,code_N2/2024-05-15/30mm/NPrintDay24,aet_7d,24.6022,mm,fixed-depth recomputation from result_forec/result_restart files
+n2_fixed_0_100cm,code_N2/2024-05-15/30mm/NPrintDay24,delta_storage_0_100cm_7d,-38.0400,mm,fixed-depth recomputation from result_forec/result_restart files
+n2_fixed_0_100cm,code_N2/2024-05-15/30mm/NPrintDay24,outflow_at_100cm_7d,56.2963958333,mm,fixed-depth recomputation from result_forec/result_restart files
+n2_fixed_0_100cm,code_N2/2024-05-15/30mm/NPrintDay24,moving_boundary_term,0,mm,fixed-depth recomputation from result_forec/result_restart files
+n2_fixed_0_100cm,code_N2/2024-05-15/30mm/NPrintDay24,water_balance_residual,-0.1589958333,mm,fixed-depth recomputation from result_forec/result_restart files
+n2_dynamic_rootzone,code_N2/2024-05-15/30mm/NPrintDay24,predecision_root_depth,69,cm,rootzone_flux_frequency_validation_summary_recomputed_v3.csv
+n2_dynamic_rootzone,code_N2/2024-05-15/30mm/NPrintDay24,final_root_depth,85,cm,rootzone_flux_frequency_validation_summary_recomputed_v3.csv
+n2_dynamic_rootzone,code_N2/2024-05-15/30mm/NPrintDay24,residual_without_moving,-58.3264125,mm,rootzone_flux_frequency_validation_summary_recomputed_v3.csv
+n2_dynamic_rootzone,code_N2/2024-05-15/30mm/NPrintDay24,moving_boundary_term,58.4250,mm,rootzone_flux_frequency_validation_summary_recomputed_v3.csv
+n2_dynamic_rootzone,code_N2/2024-05-15/30mm/NPrintDay24,residual_with_moving,0.0985875,mm,rootzone_flux_frequency_validation_summary_recomputed_v3.csv
+five_site_smoke,P1/8 candidates,max_abs_residual,0.1901518208,mm,three_output_smoke_validation_summary_v1.csv
+five_site_smoke,P15/8 candidates,max_abs_residual,0.2400916667,mm,three_output_smoke_validation_summary_v1.csv
+five_site_smoke,P2/8 candidates,max_abs_residual,0.1990312500,mm,three_output_smoke_validation_summary_v1.csv
+five_site_smoke,P3/8 candidates,max_abs_residual,0.3082670833,mm,three_output_smoke_validation_summary_v1.csv
+five_site_smoke,P4/8 candidates,max_abs_residual,0.1729806742,mm,three_output_smoke_validation_summary_v1.csv
+five_site_smoke,5 sites/40 candidates,maximum_abs_residual,0.3082670833,mm,three_output_smoke_validation_v1.md
+five_site_smoke,5 sites/40 candidates,control_depth,100,cm,site_restart_generation_smoke.csv files
+five_site_smoke,5 sites/40 candidates,NPrintDay,24,prints/day,site_restart_generation_smoke.csv files
+independent_reconstruction,5 sites/40 candidates,max_storage_identity_error,1.14e-13,mm,three_output_fixed_0_100cm_npd24_5site_smoke_results_2026-07-15.md
+independent_reconstruction,5 sites/40 candidates,max_boundary_depth_error,0,cm,three_output_fixed_0_100cm_npd24_5site_smoke_results_2026-07-15.md
+independent_reconstruction,5 sites/40 candidates,max_balance_formula_reconstruction_error,1.07e-14,mm,three_output_fixed_0_100cm_npd24_5site_smoke_results_2026-07-15.md

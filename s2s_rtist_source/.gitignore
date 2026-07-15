@@ -25,6 +25,9 @@ venv/
 !/site_general_surrogate_eval/gefs_gridmet_bias_validation_analysis_2026-07-15.md
 !/site_general_surrogate_eval/fixed_0_100cm_control_volume_validation_2026-07-15.md
 !/site_general_surrogate_eval/three_output_fixed_0_100cm_npd24_5site_smoke_results_2026-07-15.md
+!/site_general_surrogate_eval/fixed_0_100cm_reporting_evidence_2026-07-15.md
+!/site_general_surrogate_eval/fixed_0_100cm_reporting_key_numbers_2026-07-15.csv
+!/site_general_surrogate_eval/fixed_0_100cm_formal_citation_files_2026-07-15.md
 /report_artifacts/
 /teacher_persite_expert_evidence_pack_*/
 /logs/
