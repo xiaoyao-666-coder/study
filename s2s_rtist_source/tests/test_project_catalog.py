@@ -294,20 +294,27 @@ class MigrationPlannerTests(unittest.TestCase):
             self.assertFalse((root / record.original_path).exists())
             self.assertTrue(target.is_file())
 
-    def test_validate_rejects_wrong_hash_and_missing_states(self):
+    def test_validate_rejects_wrong_source_hash_and_missing_states(self):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
-            wrong_hash = self._record(root, "wrong.py", "scripts/diagnostics/wrong.py")
-            target = root / wrong_hash.current_path
-            target.parent.mkdir(parents=True)
-            (root / wrong_hash.original_path).rename(target)
-            target.write_text("changed\n", encoding="utf-8")
+            pending = self._record(root, "wrong.py", "scripts/diagnostics/wrong.py")
+            (root / pending.original_path).write_text("changed-before-move\n", encoding="utf-8")
 
-            with self.assertRaisesRegex(ValueError, "hash"):
-                self.planner.validate_plan(root, [wrong_hash])
+            with self.assertRaisesRegex(ValueError, "source hash mismatch"):
+                self.planner.validate_plan(root, [pending])
+
+            # Already-moved formal files may be rewired after the inventory snapshot,
+            # so validate_plan only requires the target to exist.
+            moved = self._record(root, "moved.py", "scripts/diagnostics/moved.py")
+            target = root / moved.current_path
+            target.parent.mkdir(parents=True, exist_ok=True)
+            (root / moved.original_path).rename(target)
+            target.write_text("rewired-after-move\n", encoding="utf-8")
+            states = self.planner.validate_plan(root, [moved])
+            self.assertEqual(states[moved.original_path], "already_moved")
 
             missing = replace(
-                wrong_hash,
+                moved,
                 original_path="missing.py",
                 current_path="scripts/diagnostics/missing.py",
             )
