@@ -7,7 +7,7 @@ import difflib
 import os
 import subprocess
 import sys
-from dataclasses import fields
+from dataclasses import fields, replace
 from pathlib import Path
 
 from .catalog import Catalog, CatalogRecord
@@ -36,7 +36,14 @@ def _build_parser() -> argparse.ArgumentParser:
 
 def _load_catalogs(project_root: Path) -> tuple[Catalog, Catalog, Catalog]:
     script_catalog = Catalog.from_csv(project_root / "scripts" / "script_catalog.csv")
+    script_catalog = Catalog(
+        replace(record, record_type="script") for record in script_catalog.records
+    )
     document_catalog = Catalog.from_csv(project_root / "docs" / "document_catalog.csv")
+    document_catalog = Catalog(
+        replace(record, record_type="document")
+        for record in document_catalog.records
+    )
     combined = Catalog([*script_catalog.records, *document_catalog.records])
     return script_catalog, document_catalog, combined
 

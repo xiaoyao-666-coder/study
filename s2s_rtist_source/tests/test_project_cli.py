@@ -107,6 +107,17 @@ class ProjectCliTests(unittest.TestCase):
             writer.writeheader()
             writer.writerows(records)
 
+    def _update_catalog_record(self, path, record_id, **updates):
+        with path.open("r", encoding="utf-8", newline="") as handle:
+            records = list(csv.DictReader(handle))
+        for record in records:
+            if record["id"] == record_id:
+                record.update(updates)
+                break
+        else:
+            self.fail(f"catalog record not found: {record_id}")
+        self._write_catalog(path, records)
+
     def invoke(self, *argv):
         stdout = io.StringIO()
         stderr = io.StringIO()
@@ -166,6 +177,40 @@ class ProjectCliTests(unittest.TestCase):
         self.assertEqual(return_code, 7)
         self.assertIn("ARGS:alpha|--beta", stdout)
         self.assertEqual(stderr, "")
+
+    def test_script_catalog_source_overrides_document_record_type(self):
+        self._update_catalog_record(
+            self.project_root / "scripts" / "script_catalog.csv",
+            "echo-args",
+            record_type="document",
+        )
+
+        list_code, stdout, stderr = self.invoke("list", "--type", "scripts")
+        run_code, run_stdout, run_stderr = self.invoke("run", "echo-args")
+
+        self.assertEqual(list_code, 0)
+        self.assertIn("script\techo-args", stdout)
+        self.assertEqual(stderr, "")
+        self.assertEqual(run_code, 7)
+        self.assertIn("ARGS:", run_stdout)
+        self.assertEqual(run_stderr, "")
+
+    def test_document_catalog_source_overrides_runnable_script_values(self):
+        self._update_catalog_record(
+            self.project_root / "docs" / "document_catalog.csv",
+            "rootzone-report",
+            record_type="script",
+            runnable="true",
+        )
+
+        list_code, stdout, stderr = self.invoke("list", "--type", "docs")
+        run_code, _, run_stderr = self.invoke("run", "rootzone-report")
+
+        self.assertEqual(list_code, 0)
+        self.assertIn("document\trootzone-report", stdout)
+        self.assertEqual(stderr, "")
+        self.assertNotEqual(run_code, 0)
+        self.assertIn("not runnable", run_stderr)
 
     def test_run_rejects_document(self):
         return_code, _, stderr = self.invoke("run", "rootzone-report")
