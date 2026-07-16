@@ -1,10 +1,12 @@
 import csv
 import io
+import os
 import tempfile
 import unittest
 from contextlib import redirect_stderr, redirect_stdout
 from dataclasses import fields
 from pathlib import Path
+from unittest.mock import patch
 
 from s2s_rtist.catalog import CatalogRecord
 from s2s_rtist.cli import main
@@ -118,12 +120,24 @@ class ProjectCliTests(unittest.TestCase):
             self.fail(f"catalog record not found: {record_id}")
         self._write_catalog(path, records)
 
-    def invoke(self, *argv):
+    def invoke(self, *argv, project_root=None):
         stdout = io.StringIO()
         stderr = io.StringIO()
         with redirect_stdout(stdout), redirect_stderr(stderr):
-            return_code = main(project_root=self.project_root, argv=list(argv))
+            return_code = main(
+                project_root=self.project_root if project_root is None else project_root,
+                argv=list(argv),
+            )
         return return_code, stdout.getvalue(), stderr.getvalue()
+
+    def _replace_echo_script(self, source):
+        (self.project_root / "scripts" / "utilities" / "echo_args.py").write_text(
+            source, encoding="utf-8"
+        )
+
+    @staticmethod
+    def _path_key(path):
+        return os.path.normcase(str(Path(path).resolve()))
 
     def test_list_defaults_to_scripts(self):
         return_code, stdout, stderr = self.invoke("list")
@@ -132,6 +146,17 @@ class ProjectCliTests(unittest.TestCase):
         self.assertIn("echo-args", stdout)
         self.assertIn("rootzone-frequency", stdout)
         self.assertNotIn("rootzone-report", stdout)
+        self.assertEqual(stderr, "")
+
+    def test_list_summary_includes_category_and_status(self):
+        return_code, stdout, stderr = self.invoke("list")
+
+        self.assertEqual(return_code, 0)
+        self.assertIn(
+            "script\techo-args\tutilities\tactive\t"
+            "scripts/utilities/echo_args.py\tEcho forwarded arguments",
+            stdout,
+        )
         self.assertEqual(stderr, "")
 
     def test_list_docs_shows_documents_only(self):
@@ -178,6 +203,82 @@ class ProjectCliTests(unittest.TestCase):
         self.assertIn("ARGS:alpha|--beta", stdout)
         self.assertEqual(stderr, "")
 
+    def test_run_resolves_relative_project_root_before_starting_child(self):
+        original_cwd = Path.cwd()
+        try:
+            os.chdir(self.project_root.parent)
+            return_code, stdout, stderr = self.invoke(
+                "run",
+                "echo-args",
+                "--",
+                "relative",
+                project_root=Path(self.project_root.name),
+            )
+        finally:
+            os.chdir(original_cwd)
+
+        self.assertEqual(return_code, 7)
+        self.assertIn("ARGS:relative", stdout)
+        self.assertEqual(stderr, "")
+
+    def test_run_child_cwd_is_resolved_project_root(self):
+        self._replace_echo_script(
+            "from pathlib import Path\n"
+            "print('CWD:' + str(Path.cwd().resolve()))\n"
+        )
+
+        return_code, stdout, stderr = self.invoke("run", "echo-args")
+
+        self.assertEqual(return_code, 0)
+        child_cwd = stdout.removeprefix("CWD:").strip()
+        self.assertEqual(self._path_key(child_cwd), self._path_key(self.project_root))
+        self.assertEqual(stderr, "")
+
+    def test_run_propagates_child_stderr(self):
+        self._replace_echo_script(
+            "import sys\n"
+            "print('CHILD-ERROR', file=sys.stderr)\n"
+        )
+
+        return_code, stdout, stderr = self.invoke("run", "echo-args")
+
+        self.assertEqual(return_code, 0)
+        self.assertEqual(stdout, "")
+        self.assertIn("CHILD-ERROR", stderr)
+
+    def test_run_builds_ordered_deduplicated_child_pythonpath(self):
+        sentinel = self.project_root / "sentinel"
+        sentinel.mkdir()
+        self._replace_echo_script(
+            "import os\n"
+            "print('PYTHONPATH:' + os.environ['PYTHONPATH'])\n"
+        )
+        inherited = os.pathsep.join(
+            [
+                str(self.project_root / "src"),
+                str(sentinel),
+                str(self.project_root / "scripts" / "utilities"),
+            ]
+        )
+
+        with patch.dict(os.environ, {"PYTHONPATH": inherited}, clear=False):
+            return_code, stdout, stderr = self.invoke("run", "echo-args")
+
+        self.assertEqual(return_code, 0)
+        child_pythonpath = stdout.removeprefix("PYTHONPATH:").strip().split(os.pathsep)
+        expected = [
+            self.project_root / "src",
+            self.project_root / "scripts" / "utilities",
+            self.project_root / "scripts" / "rootzone",
+            self.project_root / "scripts" / "setup",
+            sentinel,
+        ]
+        self.assertEqual(
+            [self._path_key(entry) for entry in child_pythonpath],
+            [self._path_key(entry) for entry in expected],
+        )
+        self.assertEqual(stderr, "")
+
     def test_script_catalog_source_overrides_document_record_type(self):
         self._update_catalog_record(
             self.project_root / "scripts" / "script_catalog.csv",
@@ -219,10 +320,17 @@ class ProjectCliTests(unittest.TestCase):
         self.assertIn("not runnable", stderr)
 
     def test_run_rejects_non_runnable_script(self):
+        self._update_catalog_record(
+            self.project_root / "scripts" / "script_catalog.csv",
+            "prepare-only",
+            status="archived",
+        )
+
         return_code, _, stderr = self.invoke("run", "prepare-only")
 
         self.assertNotEqual(return_code, 0)
         self.assertIn("not runnable", stderr)
+        self.assertIn("archived", stderr)
 
     def test_missing_catalog_is_a_concise_error(self):
         (self.project_root / "docs" / "document_catalog.csv").unlink()

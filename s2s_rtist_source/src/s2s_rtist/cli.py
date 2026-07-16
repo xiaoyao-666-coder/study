@@ -49,7 +49,10 @@ def _load_catalogs(project_root: Path) -> tuple[Catalog, Catalog, Catalog]:
 
 
 def _print_record_summary(record: CatalogRecord) -> None:
-    print(f"{record.record_type}\t{record.id}\t{record.current_path}\t{record.purpose}")
+    print(
+        f"{record.record_type}\t{record.id}\t{record.category}\t{record.status}\t"
+        f"{record.current_path}\t{record.purpose}"
+    )
 
 
 def _show_record(record: CatalogRecord) -> None:
@@ -116,7 +119,10 @@ def _run_record(
         record.record_type.casefold() != "script"
         or record.runnable.casefold() != "true"
     ):
-        print(f"error: record '{record.id}' is not runnable", file=sys.stderr)
+        print(
+            f"error: record '{record.id}' is not runnable (status: {record.status})",
+            file=sys.stderr,
+        )
         return 2
 
     if forwarded_args[:1] == ["--"]:
@@ -154,7 +160,7 @@ def _run_record(
 def main(*, project_root: Path, argv: list[str] | None = None) -> int:
     parser = _build_parser()
     arguments = parser.parse_args(argv)
-    root = Path(project_root)
+    root = Path(project_root).resolve()
     try:
         scripts, documents, combined = _load_catalogs(root)
     except (OSError, TypeError, ValueError, KeyError) as error:
