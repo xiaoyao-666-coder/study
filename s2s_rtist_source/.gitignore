@@ -54,6 +54,12 @@ venv/
 *.xls
 *.xlsx
 
+# Local paper extracts (cataloged, not versioned)
+/docs/archive/paper_extracts/
+
+# Local paper extracts (cataloged, not versioned)
+/docs/archive/paper_extracts/
+
 # Runtime logs and archives
 *.log
 *.zip

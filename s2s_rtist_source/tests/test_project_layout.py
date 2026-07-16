@@ -20,6 +20,14 @@ class ProjectLayoutTests(unittest.TestCase):
         root_scripts = sorted(path.name for path in PROJECT_ROOT.glob("*.py"))
         self.assertEqual(root_scripts, ["project_cli.py"])
 
+    def test_no_original_markdown_or_text_files_remain_at_root(self) -> None:
+        remaining = sorted(
+            path.name
+            for path in PROJECT_ROOT.iterdir()
+            if path.is_file() and path.suffix.lower() in {".md", ".txt"}
+        )
+        self.assertEqual(remaining, [])
+
     def test_script_catalog_covers_all_140_original_scripts(self) -> None:
         with SCRIPT_INVENTORY.open(encoding="utf-8-sig", newline="") as handle:
             inventory = list(csv.DictReader(handle))
@@ -32,6 +40,16 @@ class ProjectLayoutTests(unittest.TestCase):
         }
         self.assertEqual(len(original_paths), 140)
         self.assertEqual(catalog_originals, original_paths)
+
+    def test_document_catalog_covers_all_nine_original_files(self) -> None:
+        with DOCUMENT_INVENTORY.open(encoding="utf-8-sig", newline="") as handle:
+            inventory = list(csv.DictReader(handle))
+        catalog = Catalog.from_csv(DOCUMENT_CATALOG)
+        self.assertEqual(len(inventory), 9)
+        self.assertEqual(
+            {row["original_path"] for row in inventory},
+            {record.original_path for record in catalog.records},
+        )
 
     def test_unchanged_files_keep_source_hash(self) -> None:
         catalog = Catalog.from_csv(SCRIPT_CATALOG)
@@ -47,6 +65,10 @@ class ProjectLayoutTests(unittest.TestCase):
 
     def test_script_catalog_paths_exist(self) -> None:
         catalog = Catalog.from_csv(SCRIPT_CATALOG)
+        catalog.validate_paths(PROJECT_ROOT)
+
+    def test_document_catalog_paths_exist(self) -> None:
+        catalog = Catalog.from_csv(DOCUMENT_CATALOG)
         catalog.validate_paths(PROJECT_ROOT)
 
 

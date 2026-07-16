@@ -180,6 +180,72 @@ class ProjectCliTests(unittest.TestCase):
         self.assertIn("script\trootzone-frequency", stdout)
         self.assertIn("document\trootzone-report", stdout)
 
+    def test_find_smoke_returns_script_and_document_matches(self):
+        self._write_catalog(
+            self.project_root / "scripts" / "script_catalog.csv",
+            [
+                self._record(
+                    "confirmed-5site-smoke",
+                    current_path="scripts/rootzone/rootzone_frequency.py",
+                    purpose="Confirmed five site smoke runner",
+                    category="simulation",
+                    runnable="true",
+                ),
+            ],
+        )
+        self._write_catalog(
+            self.project_root / "docs" / "document_catalog.csv",
+            [
+                self._record(
+                    "fixed-smoke-server-run",
+                    record_type="document",
+                    current_path="docs/reports/rootzone_report.md",
+                    purpose="Fixed 0-100cm 5site smoke server run guide",
+                    document_type="server_guide",
+                    status="formal",
+                ),
+            ],
+        )
+
+        return_code, stdout, _ = self.invoke("find", "smoke")
+
+        self.assertEqual(return_code, 0)
+        self.assertIn("script\tconfirmed-5site-smoke", stdout)
+        self.assertIn("document\tfixed-smoke-server-run", stdout)
+
+    def test_find_smoke_returns_script_and_document_matches(self):
+        self._write_catalog(
+            self.project_root / "scripts" / "script_catalog.csv",
+            [
+                self._record(
+                    "confirmed-5site-smoke",
+                    current_path="scripts/rootzone/rootzone_frequency.py",
+                    purpose="Confirmed five site smoke runner",
+                    category="simulation",
+                    runnable="true",
+                ),
+            ],
+        )
+        self._write_catalog(
+            self.project_root / "docs" / "document_catalog.csv",
+            [
+                self._record(
+                    "fixed-smoke-server-run",
+                    record_type="document",
+                    current_path="docs/reports/rootzone_report.md",
+                    purpose="Fixed 0-100cm 5site smoke server run guide",
+                    document_type="server_guide",
+                    status="formal",
+                ),
+            ],
+        )
+
+        return_code, stdout, _ = self.invoke("find", "smoke")
+
+        self.assertEqual(return_code, 0)
+        self.assertIn("script\tconfirmed-5site-smoke", stdout)
+        self.assertIn("document\tfixed-smoke-server-run", stdout)
+
     def test_show_exact_id_includes_id_and_current_path(self):
         return_code, stdout, _ = self.invoke("show", "rootzone-frequency")
 
