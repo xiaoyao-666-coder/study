@@ -14,6 +14,22 @@ DOCUMENT_CATALOG = PROJECT_ROOT / "docs" / "document_catalog.csv"
 SCRIPT_INVENTORY = PROJECT_ROOT / "docs" / "migration" / "root_python_inventory_20260715.csv"
 DOCUMENT_INVENTORY = PROJECT_ROOT / "docs" / "migration" / "root_document_inventory_20260715.csv"
 
+REQUIRED_READMES = (
+    "scripts/README.md",
+    "scripts/data_preparation/README.md",
+    "scripts/simulation/README.md",
+    "scripts/diagnostics/README.md",
+    "scripts/training/README.md",
+    "scripts/evaluation/README.md",
+    "scripts/visualization/README.md",
+    "scripts/archive/README.md",
+    "scripts/archive/VERSIONS.md",
+    "docs/README.md",
+    "docs/operations/server/README.md",
+    "docs/research/reproduction/README.md",
+    "docs/archive/README.md",
+)
+
 
 class ProjectLayoutTests(unittest.TestCase):
     def test_root_contains_only_project_cli_python_file(self) -> None:
@@ -70,6 +86,12 @@ class ProjectLayoutTests(unittest.TestCase):
     def test_document_catalog_paths_exist(self) -> None:
         catalog = Catalog.from_csv(DOCUMENT_CATALOG)
         catalog.validate_paths(PROJECT_ROOT)
+
+    def test_required_navigation_files_exist(self) -> None:
+        self.assertEqual(
+            [path for path in REQUIRED_READMES if not (PROJECT_ROOT / path).is_file()],
+            [],
+        )
 
 
 if __name__ == "__main__":
