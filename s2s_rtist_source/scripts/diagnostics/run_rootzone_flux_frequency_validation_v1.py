@@ -22,7 +22,7 @@ from s2s_rtist.physics.rootzone_flux_frequency import (
 )
 
 
-PROJECT_ROOT = Path(__file__).resolve().parent
+PROJECT_ROOT = Path(__file__).resolve().parents[2]
 DEFAULT_WORKSPACE_ROOT = (
     PROJECT_ROOT
     / "site_general_surrogate_eval"
@@ -33,12 +33,13 @@ DEFAULT_OUTPUT_ROOT = (
     / "site_general_surrogate_eval"
     / "rootzone_flux_frequency_validation_v1"
 )
-SUPPORT_FILES = [
-    "generate_restart_decision_dataset.py",
-    "swap_three_output_labels_v1.py",
-    "rootzone_flux_frequency_diagnostic_v1.py",
-    "run_rootzone_flux_frequency_validation_v1.py",
-]
+# Isolated SWAP workspaces keep the historical root filenames.
+SUPPORT_FILE_COPIES = (
+    (PROJECT_ROOT / "src" / "s2s_rtist" / "pipelines" / "restart_decision_dataset.py", "generate_restart_decision_dataset.py"),
+    (PROJECT_ROOT / "src" / "s2s_rtist" / "labels" / "swap_three_output_labels.py", "swap_three_output_labels_v1.py"),
+    (PROJECT_ROOT / "src" / "s2s_rtist" / "physics" / "rootzone_flux_frequency.py", "rootzone_flux_frequency_diagnostic_v1.py"),
+    (PROJECT_ROOT / "scripts" / "diagnostics" / "run_rootzone_flux_frequency_validation_v1.py", "run_rootzone_flux_frequency_validation_v1.py"),
+)
 SWP_FILES = ["SwapOriginal.swp", "Swap1.swp", "swap.swp"]
 
 
@@ -89,11 +90,10 @@ def patch_workspace_nprintday(workspace: Path, nprintday: int) -> None:
 
 
 def copy_support_files(workspace: Path) -> None:
-    for name in SUPPORT_FILES:
-        source = PROJECT_ROOT / name
+    for source, target_name in SUPPORT_FILE_COPIES:
         if not source.exists():
             raise FileNotFoundError(f"missing support file: {source}")
-        shutil.copy2(source, workspace / name)
+        shutil.copy2(source, workspace / target_name)
 
 
 def choose_swap_executable() -> Path:

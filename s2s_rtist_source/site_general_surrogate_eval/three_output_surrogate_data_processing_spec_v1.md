@@ -206,7 +206,7 @@ root_boundary_outflow_7d_mm
 
 不能把正的原生 `waterflux` 直接解释为向下流出。此前 P1 审计中由该错误符号得到的近零残差不再作为闭合证据。
 
-当前 `swap_three_output_labels_v1.py` 在 `NPrintDay=1` 时，把每天一次的瞬时值乘以 `1 day` 后求和，等价于日间隔矩形积分近似。该处理只有在瞬时通量足够平稳或每日采样能够代表日平均时才可靠；正式累计标签需要通过更高 `NPrintDay` 的收敛试验确认。
+当前 `src/s2s_rtist/labels/swap_three_output_labels.py`（原 `swap_three_output_labels_v1.py`）在 `NPrintDay=1` 时，把每天一次的瞬时值乘以 `1 day` 后求和，等价于日间隔矩形积分近似。该处理只有在瞬时通量足够平稳或每日采样能够代表日平均时才可靠；正式累计标签需要通过更高 `NPrintDay` 的收敛试验确认。
 
 ### 6.2 固定根区的空间边界
 

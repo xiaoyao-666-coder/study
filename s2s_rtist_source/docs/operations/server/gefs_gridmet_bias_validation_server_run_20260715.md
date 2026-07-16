@@ -4,10 +4,16 @@ Scope: five confirmed sites, ten 2024 decision cycles, local D through D+6, GEFS
 
 ## Files
 
-- `gefs_gridmet_bias_validation_v1.py`
-- `run_gefs_gridmet_bias_validation_v1.py`
-- `requirements_gefs_gridmet_bias_validation_v1.txt`
+- `src/s2s_rtist/weather/gefs_gridmet_bias.py` (library; original: `gefs_gridmet_bias_validation_v1.py`)
+- `scripts/diagnostics/run_gefs_gridmet_bias_validation_v1.py` (CLI id: `gefs-gridmet-bias`)
+- `requirements/requirements_gefs_gridmet_bias_validation_v1.txt`
 - `tests/test_gefs_gridmet_bias_validation_v1.py`
+
+Run with:
+
+```bash
+python3 project_cli.py run gefs-gridmet-bias -- <args>
+```
 
 ## Expected workload
 

@@ -1,4 +1,0 @@
-pandas
-numpy
-h5py
-eccodes==2.44.0

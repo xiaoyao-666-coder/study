@@ -25,8 +25,9 @@ def main() -> int:
             if not target.is_file():
                 raise SystemExit(f"missing {row['current_path']}")
             row["current_sha256"] = sha256_file(target)
-            if row["status"] in {"historical", "local_reference", "active", "formal"}:
-                # Document content should match the pre-migration snapshot.
+            # Historical / local_reference extracts should stay byte-identical.
+            # Formal and active docs may be rewired after migration (CLI paths).
+            if row["status"] in {"historical", "local_reference"}:
                 if row["current_sha256"] != row["source_sha256"]:
                     raise SystemExit(
                         f"document content changed: {row['original_path']}"

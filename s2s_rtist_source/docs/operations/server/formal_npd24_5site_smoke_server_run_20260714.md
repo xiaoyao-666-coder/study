@@ -29,7 +29,14 @@ formal_npd24_5site_smoke_bundle_20260714.tar.gz
 ```bash
 cd /media/data_hot/lzx_projs/soil_moisture_otw/s2s_rtist_source
 tar -xzf /media/data_hot/lzx_projs/soil_moisture_otw/s2s_rtist_source/formal_npd24_5site_smoke_bundle_20260714.tar.gz
-python3 -m py_compile /media/data_hot/lzx_projs/soil_moisture_otw/s2s_rtist_source/run_confirmed_5site_restart_generation_smoke_v1.py /media/data_hot/lzx_projs/soil_moisture_otw/s2s_rtist_source/generate_restart_decision_dataset.py /media/data_hot/lzx_projs/soil_moisture_otw/s2s_rtist_source/swap_three_output_labels_v1.py /media/data_hot/lzx_projs/soil_moisture_otw/s2s_rtist_source/rootzone_flux_frequency_diagnostic_v1.py /media/data_hot/lzx_projs/soil_moisture_otw/s2s_rtist_source/restart_raw_audit_v1.py /media/data_hot/lzx_projs/soil_moisture_otw/s2s_rtist_source/validate_three_output_smoke_v1.py
+python3 -m py_compile \
+  project_cli.py \
+  scripts/simulation/run_confirmed_5site_restart_generation_smoke_v1.py \
+  scripts/diagnostics/restart_raw_audit_v1.py \
+  src/s2s_rtist/pipelines/restart_decision_dataset.py \
+  src/s2s_rtist/labels/swap_three_output_labels.py \
+  src/s2s_rtist/physics/rootzone_flux_frequency.py \
+  src/s2s_rtist/validation/three_output_smoke.py
 ```
 
 ## 后台运行
@@ -37,7 +44,7 @@ python3 -m py_compile /media/data_hot/lzx_projs/soil_moisture_otw/s2s_rtist_sour
 ```bash
 cd /media/data_hot/lzx_projs/soil_moisture_otw/s2s_rtist_source
 export LD_LIBRARY_PATH="/media/data_hot/lzx_projs/soil_moisture_otw/s2s_rtist_source/local_libs/gcc_runtime/usr/lib/x86_64-linux-gnu:${LD_LIBRARY_PATH:-}"
-nohup python3 /media/data_hot/lzx_projs/soil_moisture_otw/s2s_rtist_source/run_confirmed_5site_restart_generation_smoke_v1.py --run-id formal_npd24_5site_smoke_20260714_v1 --timeout-per-site 7200 > /media/data_hot/lzx_projs/soil_moisture_otw/s2s_rtist_source/formal_npd24_5site_smoke_20260714_v1.nohup.log 2>&1 &
+nohup python3 project_cli.py run confirmed-5site-smoke -- --run-id formal_npd24_5site_smoke_20260714_v1 --timeout-per-site 7200 > /media/data_hot/lzx_projs/soil_moisture_otw/s2s_rtist_source/formal_npd24_5site_smoke_20260714_v1.nohup.log 2>&1 &
 ```
 
 查看日志：

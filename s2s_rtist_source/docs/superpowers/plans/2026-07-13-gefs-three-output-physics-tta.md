@@ -67,8 +67,10 @@ The formal `NPrintDay=24` multi-site smoke has passed. Do not begin bulk GEFS pr
 
 ## File Map
 
-- Modify: `generate_restart_decision_dataset.py` - extract three-output and water-balance labels immediately after every SWAP candidate run.
-- Create: `swap_three_output_labels_v1.py` - reusable SWAP output parsers, fixed 0-100 cm aggregation, and retained dynamic-root audit calculations.
+> **Layout note (2026-07-16):** Formal modules now live under `src/s2s_rtist/` and formal runners under `scripts/`. Prefer CLI IDs via `python project_cli.py run <id> -- <args>`. Historical root filenames below are the original plan names.
+
+- Modify: `src/s2s_rtist/pipelines/restart_decision_dataset.py` (original: `generate_restart_decision_dataset.py`) - extract three-output and water-balance labels immediately after every SWAP candidate run.
+- Create: `src/s2s_rtist/labels/swap_three_output_labels.py` (original: `swap_three_output_labels_v1.py`) - reusable SWAP output parsers, fixed 0-100 cm aggregation, and retained dynamic-root audit calculations.
 - Create: `audit_swap_three_output_labels_v1.py` - one-site/one-date audit with independent balance checks.
 - Create: `prepare_gefs_site_forecasts_v1.py` - GEFS download/index, unit conversion, site extraction, and daily windows.
 - Create: `build_three_output_surrogate_dataset_v1.py` - merge SWAP labels, static features, history, actual-weather windows, and GEFS windows.

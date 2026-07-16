@@ -16,7 +16,7 @@ Server example:
 
     cd /media/data_hot/lzx_projs/soil_moisture_otw/s2s_rtist_source
     export LD_LIBRARY_PATH=/media/data_hot/lzx_projs/soil_moisture_otw/s2s_rtist_source/local_libs/gcc_runtime/usr/lib/x86_64-linux-gnu:$LD_LIBRARY_PATH
-    python3 run_confirmed_5site_restart_generation_smoke_v1.py
+    python3 project_cli.py run confirmed-5site-smoke --
 """
 
 from __future__ import annotations
@@ -40,13 +40,18 @@ from s2s_rtist.validation.three_output_smoke import (
 )
 
 
+PROJECT_ROOT = Path(__file__).resolve().parents[2]
 OUT_DIR = Path("site_general_surrogate_eval")
 CONFIRMED_WORKSPACES = OUT_DIR / "confirmed_5site_workspaces"
 RUN_ROOT = OUT_DIR / "confirmed_5site_restart_generation_smoke_v1"
-GENERATOR_SCRIPT = Path("generate_restart_decision_dataset.py")
-THREE_OUTPUT_LABEL_SCRIPT = Path("swap_three_output_labels_v1.py")
-FLUX_DIAGNOSTIC_SCRIPT = Path("rootzone_flux_frequency_diagnostic_v1.py")
-RAW_AUDIT_SCRIPT = Path("restart_raw_audit_v1.py")
+# Workspace copies keep the historical root filenames so isolated SWAP
+# workspaces can import helpers without installing the package.
+FORMAL_WORKSPACE_COPIES = (
+    (PROJECT_ROOT / "src" / "s2s_rtist" / "pipelines" / "restart_decision_dataset.py", "generate_restart_decision_dataset.py"),
+    (PROJECT_ROOT / "src" / "s2s_rtist" / "labels" / "swap_three_output_labels.py", "swap_three_output_labels_v1.py"),
+    (PROJECT_ROOT / "src" / "s2s_rtist" / "physics" / "rootzone_flux_frequency.py", "rootzone_flux_frequency_diagnostic_v1.py"),
+    (PROJECT_ROOT / "scripts" / "diagnostics" / "restart_raw_audit_v1.py", "restart_raw_audit_v1.py"),
+)
 DEFAULT_SOURCE_MAIZE = Path("model3_opt_sto_upload") / "Maize"
 
 SITE_TO_WORKSPACE = {
@@ -246,28 +251,10 @@ def prepare_site_sampling_plan(full_plan: pd.DataFrame, site: str, site_work: Pa
 
 
 def copy_generator_files(workspace: Path) -> None:
-    if not GENERATOR_SCRIPT.exists():
-        raise FileNotFoundError(f"Missing generator script: {GENERATOR_SCRIPT}")
-    if not THREE_OUTPUT_LABEL_SCRIPT.exists():
-        raise FileNotFoundError(
-            f"Missing three-output label helper: {THREE_OUTPUT_LABEL_SCRIPT}"
-        )
-    if not FLUX_DIAGNOSTIC_SCRIPT.exists():
-        raise FileNotFoundError(
-            f"Missing flux diagnostic helper: {FLUX_DIAGNOSTIC_SCRIPT}"
-        )
-    if not RAW_AUDIT_SCRIPT.exists():
-        raise FileNotFoundError(f"Missing raw audit helper: {RAW_AUDIT_SCRIPT}")
-    shutil.copy2(GENERATOR_SCRIPT, workspace / GENERATOR_SCRIPT.name)
-    shutil.copy2(
-        THREE_OUTPUT_LABEL_SCRIPT,
-        workspace / THREE_OUTPUT_LABEL_SCRIPT.name,
-    )
-    shutil.copy2(
-        FLUX_DIAGNOSTIC_SCRIPT,
-        workspace / FLUX_DIAGNOSTIC_SCRIPT.name,
-    )
-    shutil.copy2(RAW_AUDIT_SCRIPT, workspace / RAW_AUDIT_SCRIPT.name)
+    for source, target_name in FORMAL_WORKSPACE_COPIES:
+        if not source.exists():
+            raise FileNotFoundError(f"Missing formal dependency: {source}")
+        shutil.copy2(source, workspace / target_name)
     (workspace / "run_restart_smoke_one_site.py").write_text(RUNNER_SOURCE, encoding="utf-8")
 
 
@@ -312,6 +299,9 @@ def write_site_config(site: str, workspace: Path, source: Path) -> None:
 
 
 def prepend_server_runtime_library(env: dict[str, str]) -> dict[str, str]:
+    src = str(PROJECT_ROOT / "src")
+    existing_pythonpath = env.get("PYTHONPATH", "")
+    env["PYTHONPATH"] = src + (os.pathsep + existing_pythonpath if existing_pythonpath else "")
     if platform.system().lower().startswith("win"):
         return env
     local_lib = Path.cwd() / "local_libs" / "gcc_runtime" / "usr" / "lib" / "x86_64-linux-gnu"

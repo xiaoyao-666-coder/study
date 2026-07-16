@@ -116,6 +116,6 @@ moving_root_boundary_term_day_mm
 
 - 正式复算汇总：`three_output_rootzone_flux_frequency_validation_summary_2026-07-14.csv`；
 - 原始返回目录：`site_general_surrogate_eval/rootzone_flux_frequency_validation_received_20260714/validation_20260714_v2`；
-- 诊断分析模块：`rootzone_flux_frequency_diagnostic_v1.py`；
-- 服务器运行器：`run_rootzone_flux_frequency_validation_v1.py`；
+- 诊断分析模块：`src/s2s_rtist/physics/rootzone_flux_frequency.py`（原 `rootzone_flux_frequency_diagnostic_v1.py`）；
+- 服务器运行器：`scripts/diagnostics/run_rootzone_flux_frequency_validation_v1.py`（CLI id: `rootzone-frequency`）；
 - 回归测试：`tests/test_rootzone_flux_frequency_diagnostic_v1.py`。

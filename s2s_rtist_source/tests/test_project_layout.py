@@ -30,6 +30,27 @@ REQUIRED_READMES = (
     "docs/archive/README.md",
 )
 
+MOVED_FORMAL_NAMES = (
+    "gefs_gridmet_bias_validation_v1.py",
+    "generate_restart_decision_dataset.py",
+    "rootzone_flux_frequency_diagnostic_v1.py",
+    "swap_three_output_labels_v1.py",
+    "validate_three_output_smoke_v1.py",
+    "run_confirmed_5site_restart_generation_smoke_v1.py",
+    "run_continuous_ir_12site_restart_generation_v1.py",
+    "run_gefs_gridmet_bias_validation_v1.py",
+    "run_rootzone_flux_frequency_validation_v1.py",
+)
+
+FORMAL_DOCUMENTS = (
+    PROJECT_ROOT / "docs" / "operations" / "server" / "fixed_0_100cm_5site_smoke_server_run_20260715.md",
+    PROJECT_ROOT / "docs" / "operations" / "server" / "formal_npd24_5site_smoke_server_run_20260714.md",
+    PROJECT_ROOT / "docs" / "operations" / "server" / "gefs_gridmet_bias_validation_server_run_20260715.md",
+    PROJECT_ROOT / "site_general_surrogate_eval" / "three_output_rootzone_flux_frequency_validation_results_2026-07-14.md",
+    PROJECT_ROOT / "site_general_surrogate_eval" / "three_output_rootzone_water_balance_audit_2026-07-13.md",
+    PROJECT_ROOT / "site_general_surrogate_eval" / "three_output_surrogate_data_processing_spec_v1.md",
+)
+
 
 class ProjectLayoutTests(unittest.TestCase):
     def test_root_contains_only_project_cli_python_file(self) -> None:
@@ -92,6 +113,19 @@ class ProjectLayoutTests(unittest.TestCase):
             [path for path in REQUIRED_READMES if not (PROJECT_ROOT / path).is_file()],
             [],
         )
+
+    def test_formal_docs_do_not_use_old_root_commands(self) -> None:
+        failures = []
+        for path in FORMAL_DOCUMENTS:
+            text = path.read_text(encoding="utf-8")
+            for name in MOVED_FORMAL_NAMES:
+                if f"python3 {name}" in text or f"python {name}" in text:
+                    failures.append(f"{path.relative_to(PROJECT_ROOT)}:{name}")
+                if f"python3 /media/" in text and name in text:
+                    # Absolute server paths that still invoke old root filenames.
+                    if f"/{name}" in text.replace("\\", "/"):
+                        failures.append(f"{path.relative_to(PROJECT_ROOT)}:abs:{name}")
+        self.assertEqual(failures, [])
 
 
 if __name__ == "__main__":

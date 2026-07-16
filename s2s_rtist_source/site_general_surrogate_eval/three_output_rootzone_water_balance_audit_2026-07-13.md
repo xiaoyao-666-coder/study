@@ -29,7 +29,7 @@ root_boundary_outflow = -signed_waterflux_integral
 
 `result_restart.vap` 文件头明确写明 `instantaneous fluxes`，其中 `waterflux` 和 `drainage` 的单位为 `cm/day`。
 
-当前 `swap_three_output_labels_v1.py` 将每天一个瞬时 `waterflux` 值乘以 10 后在 7 天内求和。由于当前输出间隔为 `1 day`，该计算数值上等价于步长为一天的矩形积分，但不能视为 SWAP 已直接输出的每日累计量。
+当前 `src/s2s_rtist/labels/swap_three_output_labels.py`（原 `swap_three_output_labels_v1.py`）将每天一个瞬时 `waterflux` 值乘以 10 后在 7 天内求和。由于当前输出间隔为 `1 day`，该计算数值上等价于步长为一天的矩形积分，但不能视为 SWAP 已直接输出的每日累计量。
 
 ### 2.3 `NPrintDay` 的含义
 
@@ -217,7 +217,7 @@ NPrintDay = 1、4、24
 - 多站点汇总文本：用户提供的固定根区与动态根区审计结果；
 - 服务器汇总文件：`three_output_5site_corrected_flux_audit_v2.csv` 和 `three_output_5site_corrected_flux_group_summary_v2.csv`；
 - 本地 P1 原始审计目录：`site_general_surrogate_eval/three_output_balance_audit_p1_20240716_server_v1`；
-- 当前提取代码：`swap_three_output_labels_v1.py`；
+- 当前提取代码：`src/s2s_rtist/labels/swap_three_output_labels.py`（原 `swap_three_output_labels_v1.py`）；
 - SWAP 配置与符号依据：`model3_opt_sto_upload/Maize/swap.swp`；
 - 输出频率诊断结果：`three_output_rootzone_flux_frequency_validation_results_2026-07-14.md`；
 - 正式复算汇总：`three_output_rootzone_flux_frequency_validation_summary_2026-07-14.csv`。
