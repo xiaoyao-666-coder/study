@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import http.client
+import importlib.util
 import sys
 import unittest
 import warnings
@@ -15,9 +16,9 @@ import pandas as pd
 
 
 ROOT = Path(__file__).resolve().parents[1]
-sys.path.insert(0, str(ROOT))
+sys.path.insert(0, str(ROOT / "src"))
 
-from gefs_gridmet_bias_validation_v1 import (
+from s2s_rtist.weather.gefs_gridmet_bias import (
     ByteRange,
     add_reference_condition,
     aggregate_gefs_point_records,
@@ -40,7 +41,16 @@ from gefs_gridmet_bias_validation_v1 import (
     validate_reference_coverage,
     vapor_pressure_deficit_kpa,
 )
-from run_gefs_gridmet_bias_validation_v1 import _request_bytes
+
+
+RUNNER_NAME = "run_gefs_gridmet_bias_validation_v1"
+RUNNER_PATH = ROOT / "scripts" / "diagnostics" / f"{RUNNER_NAME}.py"
+RUNNER_SPEC = importlib.util.spec_from_file_location(RUNNER_NAME, RUNNER_PATH)
+assert RUNNER_SPEC is not None and RUNNER_SPEC.loader is not None
+RUNNER = importlib.util.module_from_spec(RUNNER_SPEC)
+sys.modules[RUNNER_NAME] = RUNNER
+RUNNER_SPEC.loader.exec_module(RUNNER)
+_request_bytes = RUNNER._request_bytes
 
 
 INDEX_TEXT = """\

@@ -16,7 +16,7 @@ import sys
 
 import pandas as pd
 
-from rootzone_flux_frequency_diagnostic_v1 import (
+from s2s_rtist.physics.rootzone_flux_frequency import (
     analyze_case_outputs,
     patch_nprintday_text,
 )
@@ -137,7 +137,7 @@ def portable_run_swap(log_name: str) -> None:
 
 def import_local_generator():
     sys.path.insert(0, str(Path.cwd()))
-    import generate_restart_decision_dataset as base
+    from s2s_rtist.pipelines import restart_decision_dataset as base
 
     base.run_swap = portable_run_swap
     return base

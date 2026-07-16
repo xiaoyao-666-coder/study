@@ -51,7 +51,7 @@ from pathlib import Path
 
 import pandas as pd
 
-import generate_restart_decision_dataset as base
+from s2s_rtist.pipelines import restart_decision_dataset as base
 import real_ir_update
 
 

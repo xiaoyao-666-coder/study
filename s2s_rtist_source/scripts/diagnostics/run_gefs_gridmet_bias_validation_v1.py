@@ -19,7 +19,7 @@ import h5py
 import numpy as np
 import pandas as pd
 
-from gefs_gridmet_bias_validation_v1 import (
+from s2s_rtist.weather.gefs_gridmet_bias import (
     FORECAST_DAILY_VARIABLES,
     add_reference_condition,
     aggregate_gefs_point_records,

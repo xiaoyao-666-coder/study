@@ -23,7 +23,7 @@ import pandas as pd
 import ForecastStep
 import real_ir_update
 from restart_raw_audit_v1 import preserve_candidate_raw_outputs
-from swap_three_output_labels_v1 import (
+from s2s_rtist.labels.swap_three_output_labels import (
     extract_candidate_labels,
     flatten_candidate_labels,
     inclusive_horizon_end_doy,

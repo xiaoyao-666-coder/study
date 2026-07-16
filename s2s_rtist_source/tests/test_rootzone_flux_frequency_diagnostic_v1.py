@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import importlib.util
 import sys
 import tempfile
 import unittest
@@ -9,9 +10,9 @@ import pandas as pd
 
 
 ROOT = Path(__file__).resolve().parents[1]
-sys.path.insert(0, str(ROOT))
+sys.path.insert(0, str(ROOT / "src"))
 
-from rootzone_flux_frequency_diagnostic_v1 import (
+from s2s_rtist.physics.rootzone_flux_frequency import (
     aggregate_increment_rows,
     analyze_case_outputs,
     assign_horizon_times,
@@ -22,11 +23,18 @@ from rootzone_flux_frequency_diagnostic_v1 import (
     split_profile_snapshots,
     trapezoid_integral,
 )
-from run_rootzone_flux_frequency_validation_v1 import (
-    case_directory_name,
-    patch_workspace_nprintday,
-    validation_cases,
-)
+
+
+RUNNER_NAME = "run_rootzone_flux_frequency_validation_v1"
+RUNNER_PATH = ROOT / "scripts" / "diagnostics" / f"{RUNNER_NAME}.py"
+RUNNER_SPEC = importlib.util.spec_from_file_location(RUNNER_NAME, RUNNER_PATH)
+assert RUNNER_SPEC is not None and RUNNER_SPEC.loader is not None
+RUNNER = importlib.util.module_from_spec(RUNNER_SPEC)
+sys.modules[RUNNER_NAME] = RUNNER
+RUNNER_SPEC.loader.exec_module(RUNNER)
+case_directory_name = RUNNER.case_directory_name
+patch_workspace_nprintday = RUNNER.patch_workspace_nprintday
+validation_cases = RUNNER.validation_cases
 
 
 class FluxIntegrationTests(unittest.TestCase):

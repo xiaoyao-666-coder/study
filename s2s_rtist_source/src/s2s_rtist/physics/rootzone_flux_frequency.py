@@ -9,7 +9,11 @@ from pathlib import Path
 
 import pandas as pd
 
-from swap_three_output_labels_v1 import _read_crop_table, _read_profile_table, _read_swap_csv
+from s2s_rtist.labels.swap_three_output_labels import (
+    _read_crop_table,
+    _read_profile_table,
+    _read_swap_csv,
+)
 
 
 @dataclass(frozen=True)

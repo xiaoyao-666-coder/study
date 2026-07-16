@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import importlib.util
 import sys
 import tempfile
 import unittest
@@ -12,14 +13,22 @@ import pandas as pd
 
 
 ROOT = Path(__file__).resolve().parents[1]
-sys.path.insert(0, str(ROOT))
+sys.path.insert(0, str(ROOT / "src"))
 
-from validate_three_output_smoke_v1 import (  # noqa: E402
+from s2s_rtist.validation.three_output_smoke import (  # noqa: E402
     SmokeValidationError,
     validate_smoke_dataset,
     write_validation_outputs,
 )
-import run_confirmed_5site_restart_generation_smoke_v1 as smoke_runner  # noqa: E402
+
+
+RUNNER_NAME = "run_confirmed_5site_restart_generation_smoke_v1"
+RUNNER_PATH = ROOT / "scripts" / "simulation" / f"{RUNNER_NAME}.py"
+RUNNER_SPEC = importlib.util.spec_from_file_location(RUNNER_NAME, RUNNER_PATH)
+assert RUNNER_SPEC is not None and RUNNER_SPEC.loader is not None
+smoke_runner = importlib.util.module_from_spec(RUNNER_SPEC)
+sys.modules[RUNNER_NAME] = smoke_runner
+RUNNER_SPEC.loader.exec_module(smoke_runner)
 
 
 IRRIGATION_OPTIONS = [0.0, 10.0, 15.0, 20.0, 25.0, 30.0, 40.0, 60.0]
@@ -175,7 +184,10 @@ class SmokeValidationTests(unittest.TestCase):
 
     def test_confirmed_runner_writes_validation_outputs(self) -> None:
         source = (
-            ROOT / "run_confirmed_5site_restart_generation_smoke_v1.py"
+            ROOT
+            / "scripts"
+            / "simulation"
+            / "run_confirmed_5site_restart_generation_smoke_v1.py"
         ).read_text(encoding="utf-8")
 
         self.assertIn("validate_smoke_dataset", source)

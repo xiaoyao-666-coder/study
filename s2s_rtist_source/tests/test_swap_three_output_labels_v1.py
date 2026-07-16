@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import inspect
+import importlib.util
 import json
 import sys
 import tempfile
@@ -9,19 +10,26 @@ from pathlib import Path
 
 
 ROOT = Path(__file__).resolve().parents[1]
-sys.path.insert(0, str(ROOT))
+sys.path.insert(0, str(ROOT / "src"))
 
-from swap_three_output_labels_v1 import (
+from s2s_rtist.labels.swap_three_output_labels import (
     CRP_COLUMNS,
     extract_candidate_labels,
     flatten_candidate_labels,
     inclusive_horizon_end_doy,
     patch_nprintday_text,
 )
-from restart_raw_audit_v1 import (  # noqa: E402
-    preserve_candidate_raw_outputs,
-    should_preserve_raw_candidate,
-)
+
+
+RUNNER_NAME = "restart_raw_audit_v1"
+RUNNER_PATH = ROOT / "scripts" / "diagnostics" / f"{RUNNER_NAME}.py"
+RUNNER_SPEC = importlib.util.spec_from_file_location(RUNNER_NAME, RUNNER_PATH)
+assert RUNNER_SPEC is not None and RUNNER_SPEC.loader is not None
+RUNNER = importlib.util.module_from_spec(RUNNER_SPEC)
+sys.modules[RUNNER_NAME] = RUNNER
+RUNNER_SPEC.loader.exec_module(RUNNER)
+preserve_candidate_raw_outputs = RUNNER.preserve_candidate_raw_outputs
+should_preserve_raw_candidate = RUNNER.should_preserve_raw_candidate
 
 
 AUDIT_ROOT = (
@@ -262,9 +270,13 @@ class SwapConfigTests(unittest.TestCase):
         self.assertIn("NPrintDay = 24", patched)
 
     def test_generator_wires_formal_restart_frequency_into_extraction(self) -> None:
-        source = (ROOT / "generate_restart_decision_dataset.py").read_text(
-            encoding="utf-8"
-        )
+        source = (
+            ROOT
+            / "src"
+            / "s2s_rtist"
+            / "pipelines"
+            / "restart_decision_dataset.py"
+        ).read_text(encoding="utf-8")
 
         self.assertIn("RESTART_NPRINTDAY = 24", source)
         self.assertIn("patch_nprintday_text", source)
@@ -283,7 +295,10 @@ class SwapConfigTests(unittest.TestCase):
 
     def test_continuous_runner_copies_flux_diagnostic_dependency(self) -> None:
         source = (
-            ROOT / "run_continuous_ir_12site_restart_generation_v1.py"
+            ROOT
+            / "scripts"
+            / "simulation"
+            / "run_continuous_ir_12site_restart_generation_v1.py"
         ).read_text(encoding="utf-8")
 
         self.assertIn("rootzone_flux_frequency_diagnostic_v1.py", source)
@@ -291,7 +306,10 @@ class SwapConfigTests(unittest.TestCase):
 
     def test_confirmed_smoke_runner_copies_formal_label_dependencies(self) -> None:
         source = (
-            ROOT / "run_confirmed_5site_restart_generation_smoke_v1.py"
+            ROOT
+            / "scripts"
+            / "simulation"
+            / "run_confirmed_5site_restart_generation_smoke_v1.py"
         ).read_text(encoding="utf-8")
 
         self.assertIn("swap_three_output_labels_v1.py", source)

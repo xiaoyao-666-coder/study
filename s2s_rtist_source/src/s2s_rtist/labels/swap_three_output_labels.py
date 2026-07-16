@@ -89,7 +89,7 @@ def inclusive_horizon_end_doy(decision_doy: int, horizon_days: int) -> int:
 
 
 def patch_nprintday_text(text: str, nprintday: int) -> str:
-    from rootzone_flux_frequency_diagnostic_v1 import patch_nprintday_text as impl
+    from s2s_rtist.physics.rootzone_flux_frequency import patch_nprintday_text as impl
 
     return impl(text, nprintday)
 
@@ -197,7 +197,7 @@ def extract_candidate_labels(
     horizon_days: int = 7,
     nprintday: int = 24,
 ) -> CandidateLabels:
-    from rootzone_flux_frequency_diagnostic_v1 import analyze_case_outputs
+    from s2s_rtist.physics.rootzone_flux_frequency import analyze_case_outputs
 
     result = analyze_case_outputs(
         pre_crop_path=Path(pre_crop_path),

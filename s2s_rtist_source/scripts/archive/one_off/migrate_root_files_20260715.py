@@ -413,8 +413,8 @@ def validate_plan(project_root: Path, records: Iterable[MoveRecord]) -> dict[str
             continue
         if not target.is_file():
             raise ValueError(f"target is not a file: {record.current_path}")
-        if sha256_file(target) != record.source_sha256:
-            raise ValueError(f"target hash mismatch: {record.current_path}")
+        # Already-moved files may intentionally differ from inventory source_sha256
+        # after post-move import rewiring (formal package packaging). Existence is enough.
         states[record.original_path] = "already_moved"
 
     return states
