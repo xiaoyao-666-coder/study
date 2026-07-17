@@ -1,0 +1,293 @@
+{
+  "contract_id": "gefs-precipitation-quantile-mapping-v1",
+  "contract_version": 1,
+  "created_date": "2026-07-17",
+  "scope": {
+    "phase": "small_scale_extraction_and_2019_validation",
+    "variables": [
+      "precipitation_mm"
+    ],
+    "model_training_allowed": false,
+    "full_archive_download_allowed": false,
+    "apply_to_2024_allowed": false
+  },
+  "immutable_project_constraints": {
+    "horizon_days": 7,
+    "irrigation_bounds_mm": [
+      0.0,
+      60.0
+    ],
+    "surrogate_outputs": [
+      "net_gain_7d",
+      "aet_7d_mm",
+      "soil_vwc_0_100cm_daily"
+    ],
+    "aet_components": [
+      "Tact",
+      "Eact",
+      "Interc"
+    ],
+    "pretraining_loss_components": [
+      "net_gain_prediction_loss",
+      "water_balance_residual_loss"
+    ],
+    "tta_loss_components": [
+      "water_balance_residual_loss"
+    ],
+    "tta_2024_initial_policy": "always_on_chronological_updates"
+  },
+  "split": {
+    "quantile_mapping_fit_years": [
+      2015,
+      2016,
+      2017,
+      2018
+    ],
+    "validation_year": 2019,
+    "test_tta_year": 2024,
+    "fit_may_use_validation_year": false,
+    "fit_may_use_test_year": false
+  },
+  "sites": [
+    "P1",
+    "P2",
+    "P3",
+    "P4",
+    "P15"
+  ],
+  "decision_dates": {
+    "month_day": [
+      "06-01",
+      "06-15",
+      "07-01",
+      "07-15",
+      "08-01",
+      "08-15"
+    ],
+    "selection_rule": "fixed_calendar_schedule_independent_of_observed_precipitation"
+  },
+  "forecast_source": {
+    "dataset": "NOAA_GEFSv12_reforecast",
+    "base_url": "https://noaa-gefs-retrospective.s3.amazonaws.com",
+    "cycle_hour_utc": 0,
+    "product": "apcp_sfc",
+    "members": [
+      "c00",
+      "p01",
+      "p02",
+      "p03",
+      "p04"
+    ],
+    "member_policy": "complete_ensemble_required",
+    "download_policy": "idx_guided_http_byte_ranges_only",
+    "fallback_policy": "none_for_reforecast_validation"
+  },
+  "reference_source": {
+    "dataset": "ERA5_project_weather_inputs",
+    "years": [
+      2015,
+      2016,
+      2017,
+      2018,
+      2019
+    ],
+    "normalized_variable": "precipitation_mm_reference",
+    "normalized_unit": "mm/day",
+    "unit_conversion_must_come_from_source_metadata": true,
+    "gridmet_2024_role": "external_frozen_mapping_evaluation_only"
+  },
+  "time_mapping": {
+    "decision_local_time": "06:00:00",
+    "forecast_cycle_rule": "same_date_00_utc",
+    "timezone_source": "site_iana_timezone",
+    "local_day_window": [
+      0,
+      1,
+      2,
+      3,
+      4,
+      5,
+      6
+    ],
+    "precipitation_reconstruction": "use_grib_startStep_endStep_intervals",
+    "blind_adjacent_accumulation_differencing_allowed": false
+  },
+  "quantile_mapping": {
+    "mapping_scope": "shared_across_exchangeable_members",
+    "group_keys": [
+      "site_id",
+      "lead_day"
+    ],
+    "season_pool": [
+      6,
+      7,
+      8
+    ],
+    "wet_day_reference_threshold_mm": 0.1,
+    "occurrence_correction": "forecast_threshold_matching_reference_wet_frequency",
+    "positive_amount_mapping": "empirical_cdf_monotone_linear_interpolation",
+    "reference_weighting": "repeat_each_reference_value_by_member_count",
+    "lower_tail_policy": "set_to_zero_at_or_below_fitted_forecast_wet_threshold",
+    "upper_tail_policy": "multiplicative_exceedance_above_training_maximum",
+    "negative_output_allowed": false,
+    "silent_upper_clipping_allowed": false,
+    "record_upper_extrapolation_flag": true
+  },
+  "required_tables": {
+    "member_daily_forecast": {
+      "unique_key": [
+        "site_id",
+        "forecast_init_utc",
+        "gefs_member",
+        "local_date"
+      ],
+      "required_columns": [
+        "site_id",
+        "site_timezone",
+        "forecast_init_utc",
+        "decision_date",
+        "gefs_member",
+        "local_date",
+        "lead_day",
+        "precipitation_mm_raw",
+        "source_key",
+        "source_etag",
+        "source_start_step",
+        "source_end_step"
+      ]
+    },
+    "reference_daily": {
+      "unique_key": [
+        "site_id",
+        "local_date"
+      ],
+      "required_columns": [
+        "site_id",
+        "local_date",
+        "precipitation_mm_reference",
+        "reference_dataset",
+        "reference_source_path",
+        "reference_unit_conversion"
+      ]
+    },
+    "paired_member_daily": {
+      "unique_key": [
+        "site_id",
+        "forecast_init_utc",
+        "gefs_member",
+        "local_date"
+      ],
+      "required_columns": [
+        "site_id",
+        "forecast_init_utc",
+        "decision_date",
+        "gefs_member",
+        "local_date",
+        "lead_day",
+        "split",
+        "precipitation_mm_raw",
+        "precipitation_mm_qm",
+        "precipitation_mm_reference",
+        "qm_forecast_wet_threshold_mm",
+        "qm_extrapolated_upper",
+        "qm_artifact_sha256"
+      ]
+    }
+  },
+  "expected_counts": {
+    "fit_cycles": 24,
+    "validation_cycles": 6,
+    "sites_per_cycle": 5,
+    "members_per_observation": 5,
+    "days_per_cycle": 7,
+    "fit_member_rows": 4200,
+    "fit_unique_reference_observations": 840,
+    "validation_member_rows": 1050,
+    "validation_unique_reference_observations": 210
+  },
+  "artifact_requirements": {
+    "format": "json",
+    "required_fields": [
+      "contract_id",
+      "contract_version",
+      "fit_years",
+      "site_ids",
+      "group_keys",
+      "group_sample_counts",
+      "wet_day_reference_threshold_mm",
+      "fitted_forecast_wet_thresholds_mm",
+      "forecast_quantile_nodes",
+      "reference_quantile_nodes",
+      "upper_tail_policy",
+      "training_input_sha256",
+      "artifact_sha256"
+    ],
+    "must_not_contain_years": [
+      2019,
+      2024
+    ]
+  },
+  "validation_metrics": {
+    "deterministic": [
+      "bias",
+      "mae",
+      "rmse",
+      "wet_day_frequency_error",
+      "seven_day_precipitation_mae"
+    ],
+    "probabilistic": [
+      "crps",
+      "mean_ensemble_spread",
+      "p10_p90_coverage",
+      "min_max_coverage"
+    ],
+    "probability_thresholds_mm": [
+      1.0,
+      5.0,
+      10.0,
+      20.0
+    ],
+    "probability_score": "brier_score",
+    "reference_conditions": {
+      "dry": "precipitation_mm_reference < 0.1",
+      "light": "0.1 <= precipitation_mm_reference < 5.0",
+      "moderate": "5.0 <= precipitation_mm_reference < 20.0",
+      "heavy": "precipitation_mm_reference >= 20.0"
+    }
+  },
+  "structural_acceptance": {
+    "exact_expected_counts_required": true,
+    "duplicate_keys_allowed": false,
+    "missing_required_values_allowed": false,
+    "negative_precipitation_allowed": false,
+    "nonfinite_values_allowed": false,
+    "complete_member_set_required": true,
+    "positive_mapping_must_be_monotone_non_decreasing": true,
+    "frozen_artifact_must_not_change_when_validation_values_change": true
+  },
+  "promotion_gate": {
+    "purpose": "allow_expansion_to_fuller_2019_growing_season_validation_only",
+    "requirements": [
+      "qm_seven_day_precipitation_mae <= raw_seven_day_precipitation_mae",
+      "qm_crps <= raw_crps",
+      "mean_qm_brier_score_across_thresholds <= mean_raw_brier_score_across_thresholds",
+      "if_heavy_events_exist_then_p10_p90_and_min_max_coverage_must_not_both_decline",
+      "no_unexplained_upper_tail_extrapolation_outliers"
+    ],
+    "direct_model_training_after_pilot_allowed": false
+  },
+  "required_outputs": [
+    "gefs_reforecast_member_daily_precipitation.csv",
+    "gefs_reforecast_download_manifest.csv",
+    "era5_reference_daily_precipitation.csv",
+    "gefs_precipitation_qm_artifact.json",
+    "gefs_precipitation_qm_training_summary.csv",
+    "gefs_precipitation_qm_training_manifest.json",
+    "paired_raw_and_qm_members_2019.csv",
+    "probabilistic_metrics_raw_vs_qm_2019.csv",
+    "precipitation_probability_raw_vs_qm_2019.csv",
+    "seven_day_precipitation_raw_vs_qm_2019.csv",
+    "validation_scope_and_conclusion.md"
+  ],
+  "csv_encoding": "utf-8-sig"
+}
