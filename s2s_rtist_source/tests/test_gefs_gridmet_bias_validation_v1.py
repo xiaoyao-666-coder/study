@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import http.client
 import importlib.util
+import inspect
 import sys
 import unittest
 import warnings
@@ -68,6 +69,22 @@ INDEX_TEXT = """\
 30:13507961:d=2024071600:DSWRF:surface:0-3 hour ave fcst:ens mean
 31:13893566:d=2024071600:DLWRF:surface:0-3 hour ave fcst:ens mean
 """
+
+
+class RunnerPathTests(unittest.TestCase):
+    def test_migrated_runner_resolves_the_project_root(self) -> None:
+        self.assertEqual(RUNNER.PROJECT_ROOT, ROOT)
+
+    def test_point_record_builder_accepts_a_gefs_product(self) -> None:
+        parameters = inspect.signature(RUNNER.build_gefs_point_records).parameters
+
+        self.assertIn("product", parameters)
+
+    def test_point_record_builder_accepts_required_messages(self) -> None:
+        parameters = inspect.signature(RUNNER.build_gefs_point_records).parameters
+
+        self.assertIn("required_messages", parameters)
+        self.assertEqual(parameters["product"].default, "geavg")
 
 
 class DownloadRetryTests(unittest.TestCase):
@@ -365,6 +382,22 @@ class BiasMetricTests(unittest.TestCase):
 
 
 class ProductAndDailyAggregationTests(unittest.TestCase):
+    def test_daily_to_long_accepts_precipitation_only_input(self) -> None:
+        daily = pd.DataFrame(
+            {
+                "site": ["P1"],
+                "local_date": [pd.Timestamp("2024-07-16")],
+                "precipitation_mm": [4.0],
+            }
+        )
+
+        result = forecast_daily_to_long(
+            daily, variables=("precipitation_mm",)
+        )
+
+        self.assertEqual(result["variable"].tolist(), ["precipitation_mm"])
+        self.assertEqual(result["forecast_value"].tolist(), [4.0])
+
     def test_fetches_and_concatenates_selected_ranges(self) -> None:
         calls: list[tuple[str, int, int]] = []
 

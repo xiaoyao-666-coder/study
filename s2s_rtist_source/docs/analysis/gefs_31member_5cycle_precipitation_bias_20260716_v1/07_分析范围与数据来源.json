@@ -1,0 +1,24 @@
+{
+  "decision_dates": [
+    "2024-07-16",
+    "2024-07-28",
+    "2024-08-05",
+    "2024-08-13",
+    "2024-08-21"
+  ],
+  "sites": [
+    "P1",
+    "P2",
+    "P3",
+    "P4",
+    "P15"
+  ],
+  "members": 31,
+  "daily_member_rows": 5425,
+  "ensemble_observations": 175,
+  "heavy_observations": 7,
+  "source_runs": [
+    "site_general_surrogate_eval\\gefs_member_gridmet_validation_received_20260716\\gefs_31member_1cycle_5site_20260716_v1",
+    "site_general_surrogate_eval\\gefs_member_gridmet_validation_v1\\gefs_31member_4cycle_5site_precip_20260716_v1"
+  ]
+}

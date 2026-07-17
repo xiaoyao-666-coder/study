@@ -1,0 +1,2 @@
+variable,n_observations,ensemble_mean_bias,ensemble_mean_mae,ensemble_mean_rmse,mean_ensemble_spread,mean_crps,p10_p90_coverage,min_max_coverage
+precipitation_mm,175,0.0016792626728110755,2.4494666666666665,5.3633763118731475,2.7070658510640797,1.5904796194440314,0.8228571428571428,0.9142857142857143

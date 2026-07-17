@@ -57,6 +57,12 @@ REQUIRED_MESSAGES = (
 GEFS_BUCKET_BASE = "https://noaa-gefs-pds.s3.amazonaws.com"
 
 
+def gefs_members() -> tuple[str, ...]:
+    """Return the formal GEFS control plus 30 perturbed member names."""
+
+    return ("gec00", *(f"gep{number:02d}" for number in range(1, 31)))
+
+
 def packing_resolution(
     *, binary_scale_factor: int, decimal_scale_factor: int
 ) -> float:
@@ -193,15 +199,19 @@ def build_gefs_product_url(
     *,
     cycle_hour: int,
     lead_hour: int,
+    product: str = "geavg",
     index: bool = False,
 ) -> str:
+    supported_products = {"geavg", *gefs_members()}
+    if product not in supported_products:
+        raise ValueError(f"unsupported GEFS product: {product!r}")
     date_text = pd.Timestamp(cycle_date).strftime("%Y%m%d")
     cycle_text = f"{int(cycle_hour):02d}"
     lead_text = f"{int(lead_hour):03d}"
     suffix = ".idx" if index else ""
     return (
         f"{GEFS_BUCKET_BASE}/gefs.{date_text}/{cycle_text}/atmos/pgrb2sp25/"
-        f"geavg.t{cycle_text}z.pgrb2s.0p25.f{lead_text}{suffix}"
+        f"{product}.t{cycle_text}z.pgrb2s.0p25.f{lead_text}{suffix}"
     )
 
 
@@ -461,8 +471,18 @@ FORECAST_DAILY_VARIABLES = (
 )
 
 
-def forecast_daily_to_long(frame: pd.DataFrame) -> pd.DataFrame:
-    missing = set(FORECAST_DAILY_VARIABLES).difference(frame.columns)
+def forecast_daily_to_long(
+    frame: pd.DataFrame,
+    *,
+    variables: Sequence[str] = FORECAST_DAILY_VARIABLES,
+) -> pd.DataFrame:
+    selected_variables = tuple(variables)
+    unsupported = set(selected_variables).difference(FORECAST_DAILY_VARIABLES)
+    if unsupported:
+        raise ValueError(f"unsupported daily forecast variables: {sorted(unsupported)}")
+    if not selected_variables:
+        raise ValueError("at least one daily forecast variable is required")
+    missing = set(selected_variables).difference(frame.columns)
     if missing:
         raise ValueError(f"missing daily forecast variables: {sorted(missing)}")
     id_columns = [
@@ -474,13 +494,15 @@ def forecast_daily_to_long(frame: pd.DataFrame) -> pd.DataFrame:
             "decision_date",
             "local_date",
             "lead_day",
+            "gefs_product",
+            "gefs_member",
         )
         if column in frame.columns
     ]
     return (
         frame.melt(
             id_vars=id_columns,
-            value_vars=list(FORECAST_DAILY_VARIABLES),
+            value_vars=list(selected_variables),
             var_name="variable",
             value_name="forecast_value",
         )

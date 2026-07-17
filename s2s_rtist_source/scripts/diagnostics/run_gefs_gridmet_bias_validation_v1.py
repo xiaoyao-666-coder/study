@@ -21,6 +21,7 @@ import pandas as pd
 
 from s2s_rtist.weather.gefs_gridmet_bias import (
     FORECAST_DAILY_VARIABLES,
+    REQUIRED_MESSAGES,
     add_reference_condition,
     aggregate_gefs_point_records,
     build_gefs_product_url,
@@ -40,7 +41,7 @@ from s2s_rtist.weather.gefs_gridmet_bias import (
 )
 
 
-PROJECT_ROOT = Path(__file__).resolve().parent
+PROJECT_ROOT = Path(__file__).resolve().parents[2]
 DEFAULT_GRIDMET_DIR = PROJECT_ROOT / "model3_opt_sto_upload" / "data" / "gridmet"
 DEFAULT_OUTPUT_ROOT = (
     PROJECT_ROOT / "site_general_surrogate_eval" / "gefs_gridmet_bias_validation_v1"
@@ -254,15 +255,17 @@ def _download_lead_minigrib(
     *,
     cycle_date: str,
     lead_hour: int,
+    product: str,
     cache_dir: Path,
     timeout: int,
     retries: int,
+    required_messages: Sequence[tuple[str, str]] = REQUIRED_MESSAGES,
 ) -> tuple[Path, list, dict[str, object]]:
     product_url = build_gefs_product_url(
-        cycle_date, cycle_hour=0, lead_hour=lead_hour
+        cycle_date, cycle_hour=0, lead_hour=lead_hour, product=product
     )
     index_url = product_url + ".idx"
-    stem = f"geavg_{pd.Timestamp(cycle_date).strftime('%Y%m%d')}_f{lead_hour:03d}"
+    stem = f"{product}_{pd.Timestamp(cycle_date).strftime('%Y%m%d')}_f{lead_hour:03d}"
     index_path = cache_dir / "indices" / f"{stem}.idx"
     grib_path = cache_dir / "minigrib" / f"{stem}.grib2"
     index_path.parent.mkdir(parents=True, exist_ok=True)
@@ -275,7 +278,9 @@ def _download_lead_minigrib(
             index_url, timeout=timeout, retries=retries
         ).decode("utf-8")
         index_path.write_text(index_text, encoding="utf-8")
-    selected = select_gefs_messages(parse_gefs_index(index_text))
+    selected = select_gefs_messages(
+        parse_gefs_index(index_text), required_messages=required_messages
+    )
     ranges = merge_contiguous_ranges(selected)
     if not grib_path.exists():
         payload = fetch_selected_byte_ranges(
@@ -285,6 +290,7 @@ def _download_lead_minigrib(
         )
         grib_path.write_bytes(payload)
     manifest = {
+        "gefs_product": product,
         "cycle_date": cycle_date,
         "cycle_hour_utc": 0,
         "lead_hour": lead_hour,
@@ -307,6 +313,8 @@ def build_gefs_point_records(
     retries: int,
     workers: int,
     keep_grib: bool,
+    product: str = "geavg",
+    required_messages: Sequence[tuple[str, str]] = REQUIRED_MESSAGES,
 ) -> tuple[pd.DataFrame, pd.DataFrame]:
     point_dir = cache_dir / "point_records"
     point_dir.mkdir(parents=True, exist_ok=True)
@@ -316,13 +324,15 @@ def build_gefs_point_records(
     for cycle_date in decision_dates:
         for lead_hour in range(3, 181, 3):
             point_path = point_dir / (
-                f"geavg_{pd.Timestamp(cycle_date).strftime('%Y%m%d')}_f{lead_hour:03d}.csv"
+                f"{product}_{pd.Timestamp(cycle_date).strftime('%Y%m%d')}_f{lead_hour:03d}.csv"
             )
             if point_path.exists():
                 cached = pd.read_csv(point_path, parse_dates=["cycle_init_utc"])
+                cached["gefs_product"] = product
                 point_frames.append(cached)
                 manifest_rows.append(
                     {
+                        "gefs_product": product,
                         "cycle_date": cycle_date,
                         "cycle_hour_utc": 0,
                         "lead_hour": lead_hour,
@@ -338,9 +348,11 @@ def build_gefs_point_records(
         return task, _download_lead_minigrib(
             cycle_date=cycle_date,
             lead_hour=lead_hour,
+            product=product,
             cache_dir=cache_dir,
             timeout=timeout,
             retries=retries,
+            required_messages=required_messages,
         )
 
     with ThreadPoolExecutor(max_workers=workers) as executor:
@@ -355,8 +367,9 @@ def build_gefs_point_records(
                 cycle_init_utc=cycle_init,
                 lead_hour=lead_hour,
             )
+            points["gefs_product"] = product
             point_path = point_dir / (
-                f"geavg_{cycle_init.strftime('%Y%m%d')}_f{lead_hour:03d}.csv"
+                f"{product}_{cycle_init.strftime('%Y%m%d')}_f{lead_hour:03d}.csv"
             )
             points.to_csv(point_path, index=False)
             point_frames.append(points)
@@ -376,7 +389,9 @@ def build_gefs_point_records(
     if not point_frames:
         raise ValueError("no GEFS point records were produced")
     points = pd.concat(point_frames, ignore_index=True)
-    expected_rows = len(decision_dates) * 60 * len(sites) * 8
+    expected_rows = (
+        len(decision_dates) * 60 * len(sites) * len(required_messages)
+    )
     if len(points) != expected_rows:
         raise ValueError(
             f"GEFS point row count is {len(points)}, expected {expected_rows}"
@@ -388,14 +403,18 @@ def build_gefs_point_records(
 
 
 def _validate_daily_forecast(
-    daily: pd.DataFrame, *, decision_dates: Sequence[str], sites: pd.DataFrame
+    daily: pd.DataFrame,
+    *,
+    decision_dates: Sequence[str],
+    sites: pd.DataFrame,
+    variables: Sequence[str] = FORECAST_DAILY_VARIABLES,
 ) -> None:
     expected_rows = len(decision_dates) * len(sites) * 7
     if len(daily) != expected_rows:
         raise ValueError(f"daily GEFS rows={len(daily)}, expected={expected_rows}")
     if daily.duplicated(["site", "decision_date", "local_date"]).any():
         raise ValueError("duplicate daily GEFS site/cycle/date rows")
-    missing = daily[list(FORECAST_DAILY_VARIABLES)].isna().sum()
+    missing = daily[list(variables)].isna().sum()
     missing = missing.loc[missing.gt(0)]
     if not missing.empty:
         raise ValueError(f"missing daily GEFS values: {missing.to_dict()}")

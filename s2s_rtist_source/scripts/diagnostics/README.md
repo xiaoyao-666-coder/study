@@ -29,6 +29,7 @@ Scripts that audit inputs, compare policies, diagnose failures, and run formal v
 | `diagnose-persite-curve-top-ranker-cv-failures-v1` | active | `diagnose_persite_curve_top_ranker_cv_failures_v1.py` | diagnose persite curve top ranker cv failures v1 |
 | `diagnose-tree-surrogate-curves-v1` | active | `diagnose_tree_surrogate_curves_v1.py` | diagnose tree surrogate curves v1 |
 | `gefs-gridmet-bias` | formal | `run_gefs_gridmet_bias_validation_v1.py` | run gefs gridmet bias validation v1 |
+| `gefs-member-gridmet-validation` | formal | `run_gefs_member_gridmet_validation_v1.py` | validate 31 GEFS members against gridMET with CRPS, coverage, and precipitation probability metrics |
 | `map-code-sites-to-paper-fig4-v1` | active | `map_code_sites_to_paper_fig4_v1.py` | map code sites to paper fig4 v1 |
 | `restart-raw-audit` | formal | `restart_raw_audit_v1.py` | restart raw audit v1 |
 | `rootzone-frequency` | formal | `run_rootzone_flux_frequency_validation_v1.py` | run rootzone flux frequency validation v1 |

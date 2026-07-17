@@ -16,6 +16,7 @@ Scripts that evaluate policies, summarize model results, finalize tables, and ap
 | `evaluate-binary-trigger-threshold-transfer-v1` | active | `evaluate_binary_trigger_threshold_transfer_v1.py` | evaluate binary trigger threshold transfer v1 |
 | `evaluate-confirmed-5site-collapse-guard-v1` | active | `evaluate_confirmed_5site_collapse_guard_v1.py` | evaluate confirmed 5site collapse guard v1 |
 | `evaluate-confirmed-5site-surrogate-policy-v1` | active | `evaluate_confirmed_5site_surrogate_policy_v1.py` | evaluate confirmed 5site surrogate policy v1 |
+| `evaluate-gefs-member-ensemble-policy-v1` | formal | `evaluate_gefs_member_ensemble_policy_v1.py` | aggregate member-level GEFS profit predictions and select irrigation by ensemble-mean profit |
 | `evaluate-expanded-plateau-amount-policy-v1` | active | `evaluate_expanded_plateau_amount_policy_v1.py` | evaluate expanded plateau amount policy v1 |
 | `evaluate-expanded-stage-cap-policy-v1` | active | `evaluate_expanded_stage_cap_policy_v1.py` | evaluate expanded stage cap policy v1 |
 | `evaluate-fixed-list-local-surrogate-refinement-v1` | active | `evaluate_fixed_list_local_surrogate_refinement_v1.py` | evaluate fixed list local surrogate refinement v1 |
