@@ -8,12 +8,14 @@ from datetime import date, datetime, time, timedelta, timezone
 from dataclasses import dataclass, replace
 from math import exp, sqrt
 from pathlib import Path
-from typing import Callable, Sequence
+from typing import TYPE_CHECKING, Callable, Sequence
 from zoneinfo import ZoneInfo
 
-import h5py
 import numpy as np
 import pandas as pd
+
+if TYPE_CHECKING:
+    import h5py
 
 
 @dataclass(frozen=True)
@@ -349,6 +351,13 @@ def read_gridmet_variable_points(
     dates: Sequence[str],
     output_variable: str,
 ) -> pd.DataFrame:
+    try:
+        import h5py
+    except ModuleNotFoundError as exc:
+        raise ModuleNotFoundError(
+            "gridMET HDF5 reading requires h5py; GEFS GRIB extraction does not"
+        ) from exc
+
     required_site_columns = {"site", "latitude", "longitude"}
     missing = required_site_columns.difference(sites.columns)
     if missing:
