@@ -412,6 +412,7 @@ class ProductAndDailyAggregationTests(unittest.TestCase):
                 ByteRange(start=8, end=9, short_names=("B",)),
             ],
             fetcher=fetcher,
+            workers=2,
         )
 
         self.assertEqual(payload, b"\x01\x01\x01\x08\x08")

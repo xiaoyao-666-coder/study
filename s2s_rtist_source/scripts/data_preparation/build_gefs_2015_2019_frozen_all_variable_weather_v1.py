@@ -154,14 +154,18 @@ def build_frozen_weather(
     branches = normalize_dates(nonprecip_branches)
     raw["target_year"] = pd.to_datetime(raw["decision_date"]).dt.year.astype(int)
 
-    if len(raw) != 875 or raw[MEMBER_KEYS].duplicated().any():
-        raise ValueError("raw weather must contain 875 unique five-cycle member rows")
+    if raw.empty or raw[MEMBER_KEYS].duplicated().any():
+        raise ValueError("raw weather must contain nonempty unique member rows")
     selected = branches.loc[branches["branch_id"].eq(NONPRECIP_BRANCH)].copy()
     if len(selected) != len(raw) or selected[MEMBER_KEYS].duplicated().any():
         raise ValueError("frozen nonprecipitation branch does not cover all raw member rows")
 
     branch_fields = MEMBER_KEYS + NONPRECIP_VARIABLES + ["precipitation_mm_raw"]
     selected = selected[branch_fields]
+    branch_keys = selected[MEMBER_KEYS].sort_values(MEMBER_KEYS).reset_index(drop=True)
+    raw_keys = raw[MEMBER_KEYS].sort_values(MEMBER_KEYS).reset_index(drop=True)
+    if not branch_keys.equals(raw_keys):
+        raise ValueError("frozen nonprecipitation branch keys differ from raw weather")
     raw_precipitation = raw[MEMBER_KEYS + ["precipitation_mm_raw"]].merge(
         selected[MEMBER_KEYS + ["precipitation_mm_raw"]],
         on=MEMBER_KEYS,
@@ -200,7 +204,9 @@ def build_frozen_weather(
         precipitation_factors,
         on=["target_year", "site_id"],
         how="left",
-        validate="one_to_one",
+        # One frozen causal factor is deliberately shared by every decision
+        # cycle for the same target-year/site pair.
+        validate="many_to_one",
     )
     if weekly[["overall_factor", "final_extreme_factor"]].isna().any().any():
         raise ValueError("causal precipitation factor coverage is incomplete")
@@ -318,8 +324,8 @@ def build_frozen_weather(
             maximum_nonprecip_error <= 1e-12,
             int(member_counts.min()) == 5,
             int(member_counts.max()) == 5,
-            int(output["decision_date"].nunique()) == 5,
-            int(output["site_id"].nunique()) == 5,
+            int(output["decision_date"].nunique()) >= 1,
+            int(output["site_id"].nunique()) >= 1,
             int(output["lead_day"].nunique()) == 7,
         ]
     )

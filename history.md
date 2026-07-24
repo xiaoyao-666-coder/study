@@ -148,3 +148,761 @@
 - Kept a compatibility switch in `train_otw.py`:
   - `--include-mse-term` restores the earlier hybrid objective `J_MSE + lambda * J_OTW` when needed for comparison
 - Verified that `loss_otw.py` and `train_otw.py` still compile and that pure-OTW is now the default mode.
+
+## 2026-05-01 To 2026-05-02 Pure OTW Experiment Summary
+- Completed a focused OTW-only experiment stage on the teacher's requested definition:
+  - replace the original pointwise loss by pure OTW
+  - keep `MSE` only as a logged monitoring metric
+- Pure OTW warm-start observations:
+  - can run stably from the baseline checkpoint
+  - often improves `1d`
+  - can approach baseline on medium/long horizons
+  - but `7d` improvement is not stable across reruns
+- Pure OTW from-scratch observations:
+  - substantially harder to optimize than the baseline loss
+  - full-horizon performance drops noticeably versus baseline
+  - increasing epochs alone is unlikely to solve the issue
+- Parameter search observations for pure OTW:
+  - `window_size=2` performed poorly and is not worth continuing
+  - `window_size=3` is consistently better than `window_size=2`
+  - `waste_cost=4` is the most promising region among the tested values, but its `7d` advantage is unstable across reruns
+  - `window_size=3, waste_cost=3` shows a clearer pattern of improving short horizons while hurting `7d`
+- Repeated-run observations:
+  - `ws=3, wc=4` is not a fake one-off outlier; it repeatedly gives strong short-horizon results and `7d` near baseline
+  - however, it does not provide a stable, reproducible `7d` win over baseline
+  - `ws=3, wc=3` is more consistently unfavorable for `7d`
+- Learning-rate sweep for pure OTW from scratch (`2e-5`, `1e-5`, `5e-6`):
+  - `2e-5` remained the best among the tested rates
+  - smaller learning rates made the from-scratch pure OTW results worse, not better
+  - this suggests the bottleneck is not simply an overly large learning rate
+- Short-run repeated probing from scratch (`ws=3, wc=4`) showed:
+  - all 5 short runs were far below baseline
+  - no convincing evidence that a clearly better basin is easily reachable by ordinary random restarts
+- Stable interpretation at this stage:
+  - OTW itself is useful as a shape-aware idea and can help short horizons
+  - but pure OTW alone is not a reliable replacement for the baseline loss on this soil-moisture forecasting task, especially for the teacher-prioritized `7d`
+  - the evidence now supports moving from pure OTW-only testing toward a more complete OTW-based objective
+- Most likely next research direction:
+  - build an OTW-based LGEM-style loss that restores a pointwise numerical anchor while preserving OTW's shape-aware term
+  - treat pure OTW as a completed prerequisite experiment rather than the final objective
+
+## 2026-05-03 To 2026-05-05 Paper-Aligned Baseline And OTW Retuning
+- Re-checked the original GCCL paper `2025 JH Combining graph neural network and convolutional LSTM network for.pdf` and confirmed the reported training defaults:
+  - learning rate `5e-5`
+  - hidden size `64`
+  - kernel size `3x3`
+  - `batch_size=64` for GCCL and the other non-CNN-LSTM neural baselines
+  - `Adam` + `MSE`
+  - training should continue until convergence rather than stopping at a fixed small epoch count
+- Updated the local training entrypoints to better match the paper setup:
+  - `train.py` now supports CLI arguments, uses paper-aligned defaults, removes the earlier small-batch gradient-accumulation workaround, and adds early stopping / explicit best-model save logs
+  - `train_otw.py` now uses the same paper-aligned defaults (`batch_size=64`, `learning_rate=5e-5`, default `epochs=200`, `early_stop_patience=10`), removes the earlier warm-start path completely, and also drops the old accumulation logic
+- Re-trained the baseline under the paper-aligned setup and observed that the previous `100`-epoch budget was not enough; the validation loss kept improving until very late epochs, so allowing longer training materially helped.
+- Paper-aligned baseline test results improved to:
+  - `1d`: RMSE `0.0213`, MAE `0.0159`, R2 `0.9363`
+  - `3d`: RMSE `0.0308`, MAE `0.0234`, R2 `0.8670`
+  - `5d`: RMSE `0.0352`, MAE `0.0269`, R2 `0.8263`
+  - `7d`: RMSE `0.0377`, MAE `0.0291`, R2 `0.8000`
+- This baseline is stronger than the earlier project baseline and should now be treated as the new main comparison target for all subsequent OTW and fusion experiments.
+- Added `evaluate_otw_splits.py` so each checkpoint can be evaluated consistently on `train/test` splits with:
+  - `MSE`
+  - `MAE`
+  - `R2`
+  - `DTW_mean`
+  - `TDI_sum_mean`
+  - `TDI_mean_mean`
+  - plus a machine-readable `split_metrics_summary.json` and appendable stage summary CSV rows
+- Completed a fresh paper-aligned pure-OTW hyperparameter search in three controlled stages:
+  - `s` stage: fixed `m=4`, `beta=0.01`
+  - `m` stage: fixed best `s`, fixed `beta=0.01`
+  - `beta` stage: fixed best `s` and best `m`
+- `s`-stage findings under the paper-aligned setup:
+  - performance no longer favored the old small-window solution from the earlier non-paper-aligned experiments
+  - the useful region shifted upward to `s=3~4`
+  - `s=4` gave the best `DTW_mean`, while `s=3` gave the best pointwise metrics
+  - because this stage prioritizes OTW's own shape capacity, `s=4` was chosen for the next stage
+- `m`-stage findings with `s=4`, `beta=0.01`:
+  - results were clearly non-monotonic rather than linear in `m`
+  - the strongest region was around `m=3~5`
+  - `m=3` achieved the best `DTW_mean`, while `m=5` was very close on pointwise metrics
+  - `m=3` was selected as the more shape-focused choice
+- `beta`-stage findings with `s=4`, `m=3`:
+  - `beta=0.005` gave the best overall combination of `MSE`, `MAE`, `R2`, and `DTW_mean`
+  - `beta=0.05` was close but still slightly worse
+- Current paper-aligned pure-OTW best configuration is therefore:
+  - `s=4`
+  - `m=3`
+  - `beta=0.005`
+- Best paper-aligned pure-OTW test metrics at this configuration:
+  - `MSE`: `0.001316216`
+  - `RMSE`: `0.036279690`
+  - `MAE`: `0.027499670`
+  - `R2`: `0.815412700`
+  - `DTW_mean`: `0.184578925`
+  - `DTW_median`: `0.153482765`
+  - `TDI_sum_mean`: `5.744704247`
+  - `TDI_mean_mean`: `0.568170190`
+- Interpretation after the paper-aligned retuning:
+  - OTW's standalone capability is meaningfully better than in the earlier under-aligned setup, so some of the previous weakness was indeed due to training configuration mismatch
+  - however, even after careful retuning, pure OTW still does not provide enough evidence that it can replace the baseline numerical loss by itself
+  - the relationship between `DTW` and `TDI` remains partly antagonistic on this task: configurations that improve `DTW` do not necessarily improve `TDI`, and vice versa
+  - `m` in particular shows a non-monotonic / locally oscillatory response rather than a simple linear trend, so it should be thought of as a discrete alignment-strategy control rather than a smooth strength knob
+- Dataset missing-value check was revisited explicitly:
+  - current `SMAP` and `ERA5` TIFF stacks contain no detected explicit `NaN` values and no `< -9000` placeholder values, both globally and inside the `2886` valid-mask pixels
+  - ERA5 does contain some literal zeros globally (~`1.17%`), but these are not coming from the explicit missing-value cleaning path and should not be treated as confirmed missing values without further domain justification
+- New reporting stance after this retuning stage:
+  - the paper-aligned baseline is the correct main comparison target
+  - the paper-aligned pure-OTW best setting is `s=4, m=3, beta=0.005`
+  - the next experiment stage should move to `MSE + lambda * OTW` (small `lambda` first), using the above OTW hyperparameters as the fixed OTW branch
+
+## 2026-05-08 Teacher Follow-up: Baseline-MSE-Favored Case Analysis
+- Extended `analyze_otw_kbest_and_periodicity.py` so the same teacher-follow-up workflow now exports two symmetric top-K case sets:
+  - `01_otw_topk_cases`: samples with smallest `hybrid_DTW` under the `OTW+MSE` model
+  - `04_baseline_mse_topk_cases`: samples with smallest `baseline_MSE` under the MSE-only baseline
+- The new baseline-favored outputs include:
+  - `topk_smallest_baseline_mse_samples.csv`
+  - `topk_metric_summary.json`
+  - `topk_smallest_baseline_mse_curves.png`
+  - `all_samples_metric_comparison.csv`
+- The script default output directory has been redirected to a separate folder to avoid mixing with earlier artifacts:
+  - `outputs/teacher_otw_followup_baseline_mse_reverse`
+- Local run with `top_k=8` completed successfully using:
+  - baseline directory: `outputs/otw_bias_analysis/baseline`
+  - hybrid directory: `outputs/otw_bias_analysis/hybrid_l0.1_val_loss`
+  - output directory: `outputs/teacher_otw_followup_baseline_mse_reverse`
+- Server execution convention for this stage:
+  - background commands should use the single-line style `nohup env CUDA_VISIBLE_DEVICES=<gpu_id> PYTHONUNBUFFERED=1 python3 -u <script> ... > logs/<name>.log 2>&1 &`
+  - on the current server, use GPU `3` when the user asks for the default available GPU in this workflow
+  - server Python commands should use `python3`, not `python`
+  - log checking commands should use realtime follow mode, e.g. `tail -f logs/<name>.log`
+- The earlier `outputs/teacher_otw_followup` directory should be treated as the previous mixed-output run and left unchanged for traceability.
+- In the baseline-MSE-favored top-8 samples:
+  - baseline mean `MSE` is `1.7371e-05`, hybrid mean `MSE` is `2.4346e-05`
+  - baseline mean `MAE` is `0.003509`, hybrid mean `MAE` is `0.003743`
+  - baseline mean `DTW` is `0.022566`, hybrid mean `DTW` is `0.024744`
+  - baseline mean `TDI` is `4.375`, hybrid mean `TDI` is `3.125`
+- Interpretation:
+  - When samples are selected from the baseline's own strongest pointwise cases, MSE-only keeps the advantage on `MSE/MAE/DTW`.
+  - `OTW+MSE` can still reduce average `TDI` in this subset, but it does not preserve the baseline's strongest pointwise accuracy on average.
+  - This complements the earlier OTW-favored top-K result, where `OTW+MSE` looked clearly better on samples selected by its own small `DTW`.
+
+## 2026-05-09 Teacher Follow-up: Local Trend Constraint
+- Teacher's new request:
+  - Visual results show OTW helps global shape compared with MSE-only, but both models are still weak on local trend prediction.
+  - Run two new objectives:
+    - `MSE + local trend constraint`
+    - `MSE + OTW + local trend constraint`
+  - For later local generalization-error-bound derivation, set OTW `beta=0` in this stage.
+  - If `MSE + local trend constraint` works well, it may be preferable to drop globally shape-sensitive OTW because the forecast window is only 7 days.
+- Implemented code support:
+  - Added local trend loss following the teacher's formula:
+    - `d(a,b)=|a1-b1| + sum_i |(a_{i+1}-a_i) - (b_{i+1}-b_i)|`
+  - The implementation averages this sequence distance over batch, valid pixels, and output channels.
+  - `loss_otw.py` now supports independent switches for `MSE`, `OTW`, and local trend terms.
+  - `train_otw.py` now logs and checkpoints `val_mse`, `val_otw`, `val_trend`, and validation `7d RMSE`.
+  - `train_otw.py` defaults OTW `beta` to `0.0`; `beta <= 0` uses absolute value instead of smooth L1.
+  - `evaluate_otw_splits.py` and `shape_metrics.py` now include `LocalTrend_mean` / `LocalTrend_median` in split summaries.
+- Suggested first-run experiment commands:
+  - Experiment 1: use `--include-mse-term --disable-otw-term --include-trend-term`.
+  - Experiment 2: use `--include-mse-term --include-trend-term --window-size 4 --waste-cost 3 --beta 0`.
+- Verification completed locally:
+  - `python -m py_compile train_otw.py loss_otw.py evaluate_otw_splits.py shape_metrics.py`
+  - Small tensor smoke test passed for identical sequences, shifted sequences, and OTW-disabled trend objective.
+- Follow-up speed diagnosis:
+  - Slowdown is expected when adding sequence-level local trend and OTW terms because each batch must gather valid-pixel sequences from `(B,T,H,W,C)` into `(B*valid_pixels*C,T)`.
+  - The first implementation repeated this valid-series extraction separately for OTW and local trend, and validation also moved full predictions back to CPU every epoch to compute full denormalized step metrics.
+  - Optimized `loss_otw.py` so OTW and local trend share one valid-series extraction per batch.
+  - Optimized `train_otw.py` validation so checkpoint selection uses GPU-side normalized `7d` RMSE during training; full denormalized metrics are still computed at final test/evaluation time.
+- Server experiment summary from `outputs/local_trend_summary.csv`:
+  - Baseline test global metrics: `RMSE=0.03350`, `R2=0.84265`, `DTW_mean=0.17273`, `TDI_sum_mean=4.98198`, `LocalTrend_mean=0.10161`.
+  - `MSE+Trend` with `lambda_trend=0.003/0.01/0.03` all underperformed baseline on global `RMSE/R2/DTW`.
+  - Increasing `lambda_trend` improved `MSE+Trend` global RMSE from `0.03867` to `0.03732`, but still did not reach baseline.
+  - `MSE+Trend(lambda=0.03)` gave the best `LocalTrend_mean=0.10073`, only slightly better than baseline `0.10161`.
+  - `MSE+OTW(lambda=0.03)+Trend(lambda=0.01), beta=0` was the strongest new-loss run on global point/shape metrics (`RMSE=0.03649`, `R2=0.81324`, `DTW_mean=0.19085`), but still worse than baseline.
+- Current reporting stance: local trend constraint is not yet a replacement for MSE baseline; OTW still helps among the new-loss variants, but the original baseline remains the main result.
+
+## 2026-05-10 Reproducibility: Fixed Random Seed Support
+- Teacher follow-up requirement:
+  - experiments should use fixed random seeds and be rerun 2-3 times to verify reproducibility
+  - the training-loss trajectory should be checked for run-to-run consistency under the same seed
+- Code updates completed:
+  - `train.py` and `train_otw.py` now expose `--seed` (default `42`)
+  - both training entries now set:
+    - Python `random.seed`
+    - NumPy `np.random.seed`
+    - PyTorch CPU/GPU seeds
+    - `torch.backends.cudnn.deterministic = True`
+    - `torch.backends.cudnn.benchmark = False`
+    - `torch.use_deterministic_algorithms(True)`
+    - `CUBLAS_WORKSPACE_CONFIG=:4096:8`
+  - `prepare_dataloaders(...)` now accepts `seed` and passes a fixed `torch.Generator` into the shuffled training DataLoader
+- Verification completed locally:
+  - `python -m py_compile train_otw.py train.py data_loader.py`
+- Current status:
+  - deterministic seeding support is now implemented in code
+  - repeated 2-3 run equality of training loss still needs to be verified on the server by launching the same configuration multiple times with the same `--seed`
+
+## 2026-05-10 Teacher Update: Reproducibility, Multi-seed Averaging, and Training-stage Visuals
+- Teacher's latest requirements:
+  - fix random seed and verify that running the same setup 2-3 times gives the same training-loss trajectory
+  - use 3 fixed random seeds and report the mean result for each method
+  - record training-set metrics in addition to test-set metrics, because `LocalTrend` being worse than baseline on test set alone is insufficient to judge underfitting vs overfitting
+  - during experiment stage, prioritize:
+    - train / val / test loss curves
+    - prediction curves on selected test samples
+      - especially baseline-selected top-K largest and smallest MSE cases
+      - compare baseline, `MSE+Trend`, `MSE+OTW`, and `MSE+OTW+Trend`
+- Code updates completed:
+  - `train.py` and `train_otw.py` now save per-epoch `loss_history.json` and `loss_history.csv`
+  - baseline training now records `train_loss`, `val_loss`, `test_loss`
+  - OTW/trend training now records:
+    - `train_loss`, `train_mse`, `train_otw`, `train_trend`
+    - `val_loss`, `val_mse`, `val_otw`, `val_trend`, `val_primary_rmse`
+    - `test_loss`, `test_mse`, `test_otw`, `test_trend`, `test_primary_rmse`
+  - `evaluate_otw_splits.py` summary rows now include `seed`
+  - added `summarize_seed_runs.py` to aggregate 3-seed results and visualize per-run loss curves
+  - added `analyze_multimodel_topk_curves.py` to plot multiple model predictions on baseline-selected top-K smallest / largest MSE samples
+- Verification completed locally:
+  - `python -m py_compile train_otw.py train.py data_loader.py evaluate_otw_splits.py summarize_seed_runs.py analyze_multimodel_topk_curves.py`
+
+## 2026-05-14 Current Context After Compaction
+- Current active user request is the teacher's reproducibility-focused local-trend / OTW experiment stage.
+- Code changes that should be treated as already completed:
+  - `data_loader.py` supports `prepare_dataloaders(..., seed=None)` and passes a fixed `torch.Generator` to the shuffled training DataLoader.
+  - `train.py` supports `--seed`, deterministic setup, and per-epoch `loss_history.json/csv` with train / val / test loss.
+  - `train_otw.py` supports `--seed`, deterministic setup, and per-epoch `loss_history.json/csv` with train / val / test loss plus MSE / OTW / Trend components.
+  - `loss_otw.py` no longer uses CUDA `cumsum` in OTW's windowed cumulative calculation, because `cumsum_cuda_kernel` is nondeterministic under PyTorch deterministic mode. It now uses an explicit short sliding-window summation loop.
+  - `evaluate_otw_splits.py` summary rows include `seed`.
+  - `summarize_seed_runs.py` aggregates fixed-seed CSV results into `seed_mean_std_summary.csv` and plots per-run train / val / test loss curves.
+  - `analyze_multimodel_topk_curves.py` plots baseline-selected top-K smallest / largest MSE prediction curves across multiple models.
+  - `visualize_local_trend_summary.py` was patched for shorter labels, baseline recognition from `baseline_seed*`, pure-OTW labels, and checkpoint-path de-duplication, but it is not the preferred final averaged multi-seed visualizer unless adapted to mean/std results.
+- Local verification already completed after these edits:
+  - `python -m py_compile train_otw.py train.py data_loader.py evaluate_otw_splits.py summarize_seed_runs.py analyze_multimodel_topk_curves.py`
+  - `python -m py_compile summarize_seed_runs.py visualize_local_trend_summary.py`
+- Important reproducibility note:
+  - Same-seed repeated runs on the server were nearly identical but not bitwise identical, with tiny numerical differences around `1e-5` to `1e-4`, which is acceptable wording as "fixed seed + same GPU gives stable numerical reproducibility, not exact bitwise identity."
+  - OTW old results before the `loss_otw.py` cumsum fix should not be trusted for final reporting.
+- Server directory convention:
+  - Server project root: `/media/data_hot/lzx_projs/soil_moisture_otw`
+  - Non-OTW baseline / trend-only checkpoints: `checkpoints_seedruns`
+  - Fixed-OTW rerun checkpoints after cumsum removal: `checkpoints_seedruns_fixedotw`
+  - Non-OTW logs: `logs`
+  - Fixed-OTW logs: `logs_fixedotw`
+- Completed server experiment matrix:
+  - All 30 fixed-seed checkpoints were reported as present with both `best_model.pth` and `loss_history.csv`.
+  - Non-OTW groups in `checkpoints_seedruns`, each with seeds `42`, `123`, `2025`:
+    - `baseline`
+    - `trend_t003`
+    - `trend_t01`
+    - `trend_t03`
+  - Fixed-OTW groups in `checkpoints_seedruns_fixedotw`, each with seeds `42`, `123`, `2025`:
+    - `otw_l003`
+    - `otw_l003_trend_t01`
+    - `otw_l01_trend_t01`
+    - `otw_l001_trend_t03`
+    - `otw_l003_trend_t03`
+    - `otw_l01_trend_t03`
+- Current next steps:
+  - Evaluate all 30 checkpoints with `evaluate_otw_splits.py` on `train`, `val`, and `test`, writing one combined CSV such as `outputs/local_trend_summary_final_seedruns.csv`.
+  - Use `summarize_seed_runs.py` to compute 3-seed mean/std and plot train / val / test loss curves.
+  - Use `analyze_multimodel_topk_curves.py` on a representative seed, likely seed `42`, to compare baseline, `MSE+Trend`, `MSE+OTW`, and `MSE+OTW+Trend` on baseline-selected top-K smallest and largest MSE samples.
+- Reporting stance for this stage:
+  - Final experimental comparison should use 3-seed mean/std, not single-seed results.
+  - Baseline and trend-only results can use `checkpoints_seedruns`.
+  - OTW and OTW+Trend results should use only `checkpoints_seedruns_fixedotw`.
+  - To discuss underfitting or overfitting, compare train/test metrics and train/val/test loss curves rather than looking only at test `LocalTrend`.
+
+## 2026-05-16 Teacher Requirement Closure: Reproducibility And Final Visualization Pack
+- The teacher's four experiment-process requirements have now been closed:
+  - fixed random seed and verify repeated training loss behavior
+  - use three fixed random seeds and report method-level mean/std
+  - record train metrics as well as val/test metrics to judge underfitting vs overfitting
+  - prioritize experiment-stage visuals: train/val/test loss curves and baseline-MSE top-K prediction curves
+- Same-seed reproducibility verification:
+  - used baseline with fixed `seed=42`
+  - ran complete 200-epoch training three times serially
+  - compared all 200 epochs of `train_loss`, `val_loss`, and `test_loss`
+  - maximum absolute differences:
+    - `train_loss`: `2.18e-5`
+    - `val_loss`: `9.03e-5`
+    - `test_loss`: `3.87e-5`
+  - reporting wording: fixed seed makes the baseline training process stably reproducible; curves are effectively overlapping with only small floating-point-level differences.
+- OTW+Trend reproducibility note:
+  - an earlier same-seed OTW+Trend parallel/dirty-GPU attempt diverged noticeably and should not be used as reproducibility evidence.
+  - after switching to serial same-GPU debug runs, differences shrank substantially, but OTW/validation components remained more numerically sensitive than baseline.
+  - safest reporting stance: use baseline to demonstrate seed-control reproducibility, and use 3-seed mean/std for final method comparison.
+- Final 30-checkpoint evaluation was completed:
+  - evaluated all 30 checkpoints on `train`, `val`, and `test`
+  - aggregated method-level three-seed mean/std
+  - generated per-run loss curves and top-K prediction curves
+- Key final table:
+  - `outputs/final_seedrun_summary/seed_mean_std_summary.csv`
+  - contains 10 method rows:
+    - `Baseline`
+    - `Trend0.003`
+    - `Trend0.01`
+    - `Trend0.03`
+    - `O0.03`
+    - `O0.03+T0.01`
+    - `O0.03+T0.03`
+    - `O0.01+T0.03`
+    - `O0.1+T0.01`
+    - `O0.1+T0.03`
+  - includes train/val/test metrics with mean/std for:
+    - `MSE`
+    - `RMSE`
+    - `MAE`
+    - `R2`
+    - `DTW_mean`
+    - `TDI_sum_mean`
+    - `LocalTrend_mean`
+- Main final metric conclusion:
+  - baseline remains strongest overall on `train`, `val`, and `test` for point prediction and most shape metrics.
+  - local-trend and OTW+local-trend variants do not beat baseline on test `LocalTrend`.
+  - because those variants are also weaker on the training split, the current behavior is not typical overfitting.
+  - better wording: current local-trend/OTW constraints show target mismatch or effective underfitting relative to the MSE baseline.
+  - some variants improve `TDI`, so the constraints can affect temporal alignment, but this comes with worse overall point accuracy and worse `LocalTrend`.
+- Key baseline 3-seed test metrics from the final summary:
+  - `RMSE_mean`: `0.032655`
+  - `R2_mean`: `0.850434`
+  - `DTW_mean_mean`: `0.168362`
+  - `TDI_sum_mean_mean`: `4.731662`
+  - `LocalTrend_mean_mean`: `0.097817`
+- Suggested compact submission/output pack:
+  - `outputs/repro_seed42/`
+  - this folder currently contains the most useful files for the teacher:
+    - `same_seed_full_loss_curves.png`
+    - `same_seed_full_loss_diff.csv`
+    - `seed_mean_std_summary.csv`
+    - `train_val_test_metrics_panel.png`
+    - `train_val_test_generalization_gap.png`
+    - `train_vs_test_metric_scatter.png`
+    - `baseline_seed42_loss_curves.png`
+    - `trend_t03_seed42_loss_curves.png`
+    - `otw_l003_seed42_loss_curves.png`
+    - `otw_l003_trend_t03_seed42_loss_curves.png`
+    - `baseline_mse_topk_small_curves.png`
+    - `baseline_mse_topk_large_curves.png`
+    - `test_metrics_horizontal.png`
+    - `test_metrics_labeled.csv`
+- Mapping from files to teacher requirements:
+  - same-seed reproducibility:
+    - `outputs/repro_seed42/same_seed_full_loss_curves.png`
+    - `outputs/repro_seed42/same_seed_full_loss_diff.csv`
+  - three-seed method averages:
+    - `outputs/repro_seed42/seed_mean_std_summary.csv`
+  - train/val/test metrics for underfit/overfit diagnosis:
+    - `outputs/repro_seed42/train_val_test_metrics_panel.png`
+    - `outputs/repro_seed42/train_val_test_generalization_gap.png`
+    - `outputs/repro_seed42/train_vs_test_metric_scatter.png`
+  - experiment-stage loss curves:
+    - representative seed-42 loss-curve PNGs in `outputs/repro_seed42/`
+    - full 30 per-run loss curves remain in `outputs/final_seedrun_summary/`
+  - baseline-MSE top-K prediction curves:
+    - `outputs/repro_seed42/baseline_mse_topk_small_curves.png`
+    - `outputs/repro_seed42/baseline_mse_topk_large_curves.png`
+- Suggested summary wording for the teacher:
+  - fixed `seed=42` baseline repeated three times over full 200 epochs gives nearly overlapping train/val/test loss curves, with max differences `2.18e-5`, `9.03e-5`, and `3.87e-5`.
+  - final comparisons use three seeds `42/123/2025` and report mean/std.
+  - baseline remains best overall across train/val/test on RMSE/R2/DTW/LocalTrend.
+  - local-trend/OTW constraints can reduce TDI in some settings, but do not improve overall prediction accuracy or test LocalTrend.
+  - since train metrics also lag baseline, current result is closer to loss-target mismatch/effective underfitting than classical overfitting.
+
+## 2026-05-16 Teacher Next Direction: Longer Input Window And Downstream-Decision Literature
+- Teacher feedback on the completed experiment stage:
+  - the experimental record is now complete and this style should be kept for future ideas.
+  - when an idea does not work, first perform simple implementation checks before judging the idea:
+    - verify code correctness and reproducibility, including fixed random seeds.
+    - verify the main hyperparameters, including not only OTW parameters and loss weights but also input-window length.
+  - after those checks, combine quantitative results and visualizations to judge whether the idea itself has hidden assumptions that do not fit the dataset/task.
+- Teacher's diagnosis of the current OTW/local-trend stage:
+  - if the current model really uses the original paper's 3-day input window, then adding OTW or local-trend constraints may mostly inject extra supervision noise.
+  - with only a 3-day input window, the model may only learn a smooth-output tendency, and the current visualization results are consistent with this.
+  - OTW itself may not be especially suitable for soil-moisture prediction because it focuses on cumulative distribution within a computation window and can ignore physically meaningful change direction.
+  - shape-aware constraints were introduced to better serve downstream decisions such as irrigation scheduling, precision agriculture, and drought warning, but this only makes sense when numerical prediction is already accurate enough.
+- Next experimental task 1: longer input-window verification.
+  - If the current `in_steps` is 3 days, rerun the comparison with longer input windows:
+    - `in_steps=14`
+    - `in_steps=21`
+  - Compare whether local-trend / OTW / OTW+local-trend losses can surpass the corresponding longer-window baseline.
+  - This comparison should still follow the current good experimental practice:
+    - fixed seeds
+    - preferably 3-seed mean/std for final comparison
+    - record train/val/test metrics
+    - keep train/val/test loss curves
+    - keep baseline-MSE top-K prediction curves for representative models
+  - Important fairness rule:
+    - each input-window length needs its own baseline.
+    - do not compare 14-day or 21-day OTW/trend variants only against the old 3-day baseline.
+- Next research task 2: downstream-decision literature survey.
+  - Use Google Scholar / academic search to investigate recent-three-year soil-moisture prediction papers focused on:
+    - irrigation scheduling
+    - precision agriculture
+    - drought early warning
+  - The survey should prioritize papers whose main contribution serves downstream decision tasks rather than only lowering MSE/RMSE.
+  - Start from the reproduced GCCL baseline paper and inspect its citing papers.
+  - Screen for papers that match the desired direction:
+    - soil-moisture forecasting linked to decision-making
+    - task-level evaluation beyond ordinary prediction error
+    - metrics for irrigation/drought/agricultural decisions
+  - Key thing to extract from each relevant paper:
+    - downstream task definition
+    - quantitative evaluation metrics used for the downstream task
+    - whether prediction accuracy is only an intermediate component
+    - what data, lead time, and operational decision setting are used
+- Strategic shift suggested by teacher:
+  - Instead of only trying to improve MSE/RMSE with shape losses, consider designing work that directly serves downstream agricultural decisions.
+  - This type of work may be less common but potentially more valuable for a high-level paper.
+  - Before proposing a new method, first do enough literature review to understand established downstream-task metrics and research gaps.
+
+## 2026-05-17 To 2026-05-18 Long-Window Verification And Decision-Oriented Literature Update
+- The input-window-length verification requested by the teacher has now been completed.
+- Because `in_steps=14` and `in_steps=21` could not fit on a single 24GB RTX 4090 with the original `batch_size=64`, the long-window experiments were run with:
+  - `batch_size=32`
+  - `accumulation_steps=2`
+  - effective batch size `64`
+  - fixed seeds `42`, `123`, `2025`
+  - the same `out_steps=7` and the same baseline / Trend / OTW / OTW+Trend matrix
+- The long-window experiment matrix included:
+  - `Baseline`
+  - `Trend0.003`, `Trend0.01`, `Trend0.03`
+  - `O0.03`
+  - `O0.03+T0.01`, `O0.03+T0.03`
+  - `O0.1+T0.01`, `O0.1+T0.03`
+  - `O0.01+T0.03`
+- Final long-window results:
+  - for both `in_steps=14` and `in_steps=21`, the corresponding `Baseline` remained the best method on `test RMSE` and `test R2`
+  - no Trend / OTW / OTW+Trend variant exceeded the corresponding long-window baseline
+  - `in_steps=14` baseline was slightly better than `in_steps=21` baseline, but both were still worse than the original `in_steps=3` paper-aligned baseline
+  - some OTW-based variants reduced `TDI`, but this came with worse `RMSE`, `R2`, `DTW`, and `LocalTrend`
+  - train and test metrics both lagged the baseline for the constraint-based losses, so the behavior is better interpreted as target mismatch / effective underfitting rather than classical overfitting
+- Stable interpretation after the long-window check:
+  - the failure of OTW / local-trend losses cannot be explained mainly by the 3-day input window being too short
+  - a longer input window did not unlock a consistent advantage for the shape-aware losses
+  - the main issue is more likely mismatch between the loss target and the soil-moisture forecasting task itself
+- Evaluation artifacts produced for this stage:
+  - `outputs/longwin_in14_summary/seed_mean_std_summary.csv`
+  - `outputs/longwin_in21_summary/seed_mean_std_summary.csv`
+  - `outputs/longwin_in14_summary/train_val_test_metrics_panel.png`
+  - `outputs/longwin_in14_summary/train_val_test_generalization_gap.png`
+  - `outputs/longwin_in14_summary/train_vs_test_metric_scatter.png`
+  - `outputs/longwin_in21_summary/train_val_test_metrics_panel.png`
+  - `outputs/longwin_in21_summary/train_val_test_generalization_gap.png`
+  - `outputs/longwin_in21_summary/train_vs_test_metric_scatter.png`
+- Current long-window reporting stance:
+  - keep the teacher-facing wording centered on fairness:
+    - each input-window length has its own baseline
+    - long-window runs use gradient accumulation only to maintain the original effective batch size under memory limits
+  - the main takeaway is that longer input context did not rescue OTW/local-trend performance
+
+## 2026-05-17 To 2026-05-18 Decision-Oriented Literature Screening Update
+- The literature screening has shifted from generic soil-moisture forecasting to more decision-oriented agricultural water management work.
+- The most useful literature categories identified so far are:
+  - real-time irrigation scheduling and decision support
+  - CWSI / fASW / LWP based irrigation management
+  - precision irrigation prescription maps and management zones
+  - crop water requirement prediction reviews that explicitly frame the prediction-to-decision chain
+- Papers found to be especially relevant:
+  - `Real-Time Irrigation Scheduling Based on Weather Forecasts, Field Observations, and Human-Machine Interactions`
+    - a closed-loop real-time irrigation scheduling framework
+    - uses weather forecasts, field observations, data assimilation, and human-machine interaction
+    - evaluates not only prediction quality but also irrigation amount, yield, profit, water saving, and user adoption
+  - `A crop water stress index based internet of things decision support system for precision irrigation of wine grape`
+    - a true DSS for precision irrigation
+    - uses daily CWSI, fraction of available soil moisture, leaf water potential, and irrigation amount
+    - highlights real manager use and seasonal consistency of irrigation decisions
+  - `A spatial machine-learning model for predicting crop water stress index for precision irrigation of vineyards`
+    - predicts spatial CWSI maps for management zones and prescription maps
+    - emphasizes precision irrigation decisions and variable-rate irrigation
+  - `Evaluation of artificial intelligence algorithms with sensor data assimilation in estimating crop evapotranspiration and crop water stress index for irrigation water management`
+    - evaluates AI + sensor assimilation for ETc and CWSI
+    - framed explicitly as an irrigation water management / IDSS problem
+  - `Comparing Machine Learning Algorithms for Estimating the Maize Crop Water Stress Index (CWSI) Using UAV-Acquired Remotely Sensed Data in Smallholder Croplands`
+    - mainly a CWSI estimation paper
+    - useful as a bridge from thermal / remote sensing to water-stress monitoring
+- Strong review papers found to be useful for framing:
+  - `A Review on the Optimization of Irrigation Schedules for Farmlands Based on a Simulation-Optimization Model`
+  - `基于多源信息的作物需水预测与灌溉决策支持模型构建研究进展`
+  - both emphasize that irrigation decisions are about scheduling variables, water productivity, yield, quality, water saving, and multi-objective trade-offs rather than pure RMSE
+- Current recommended research direction after the literature scan:
+  - move from pure soil-moisture prediction to prediction-driven water-deficit risk warning / irrigation triggering / precision irrigation support
+  - keep GCCL as the prediction module
+  - map future soil-moisture forecasts to threshold-based or risk-based decision variables
+  - evaluate with downstream metrics such as warning lead time, miss rate, false alarm rate, CSI/F1/AUC, water-saving potential, and management-zone consistency
+- The literature scan also clarified that pure deep-learning-only irrigation prediction papers are less valuable than papers that connect prediction to a decision layer or to a DSS/optimization framework.
+
+## 2026-05-18 To 2026-05-19 Long-Window Visualization Consolidation
+- The long-window comparison plotting script `visualize_longwin_summary.py` was expanded to support a fuller cross-window comparison rather than only `in14` vs `in21`.
+- The script now reads three summary tables together:
+  - `outputs/final_seedrun_summary/seed_mean_std_summary.csv` as `in3`
+  - `outputs/longwin_in14_summary/seed_mean_std_summary.csv` as `in14`
+  - `outputs/longwin_in21_summary/seed_mean_std_summary.csv` as `in21`
+- The baseline comparison figure was adjusted so that `in3` can appear as a real bar when available instead of only a dashed reference line.
+- The method-level metric panel now compares `in3`, `in14`, and `in21` together in one plot:
+  - `outputs/longwin_comparison/longwin_method_test_metrics.png`
+- The train-test RMSE gap figure was also expanded to show all three windows:
+  - `outputs/longwin_comparison/longwin_train_test_rmse_gap.png`
+- Two complementary delta heatmap views are now maintained:
+  - delta to the same-window baseline:
+    - `outputs/longwin_comparison/delta_to_window_baseline_heatmap.png`
+  - delta to the original `in3` baseline:
+    - `outputs/longwin_comparison/delta_to_in3_baseline_heatmap.png`
+- The heatmap styling was improved for readability:
+  - the diverging colormap was softened
+  - text color now switches automatically in dark cells so numeric labels remain legible
+- Additional train-side visualizations were added to the same script:
+  - `outputs/longwin_comparison/longwin_method_train_metrics.png`
+  - `outputs/longwin_comparison/delta_to_window_baseline_train_heatmap.png`
+  - `outputs/longwin_comparison/delta_to_in3_baseline_train_heatmap.png`
+- The plotting script now exports both test and train delta CSVs, so later reporting can separately discuss:
+  - absolute performance across windows
+  - same-window improvement or degradation relative to each baseline
+  - comparison back to the original `in3` setup
+  - whether constraint-based losses hurt already on the train side
+
+## 2026-05-20 Journal Screening And LetPub Search Notes
+- A separate note file was created for the journal-screening context:
+  - `journal_query_notes_2026-05-20.md`
+- The journal-search discussion centered on how to identify CAS zone-1 / zone-2 journals in LetPub for the evolving research direction.
+- Stable search guidance from the LetPub exploration:
+  - do not overconstrain the search page at the beginning
+  - use only a few filters at a time
+  - the `research direction` field is keyword-based and not very intelligent
+  - the `small subject category` filter is very strong and can eliminate clearly relevant journals
+  - for this project, `small subject category` is better used later for verification rather than at the first screening step
+- Practical LetPub search pattern established:
+  - first search zone `1`
+  - then search zone `2`
+  - combine the two result sets as the candidate pool for "CAS zone 2 or above"
+- Search keywords considered most relevant for later rounds:
+  - `soil moisture`
+  - `soil moisture forecasting`
+  - `root zone soil moisture`
+  - `drought forecasting`
+  - `agricultural drought`
+  - `vegetation drought`
+  - `precision agriculture`
+  - `irrigation scheduling`
+  - `decision support system`
+- Empirical LetPub finding:
+  - the combination `research direction = soil moisture` + environmental-science macro category + remote-sensing small category + zone 1 produced zero results
+  - relaxing the search to `research direction = soil` with `small subject category = no limit` produced results
+  - this further confirmed that the small-category filter was too restrictive for early screening
+- OA meaning was clarified during the search:
+  - `OA = Open Access`
+  - `Yes` means the journal is open access or primarily open access
+  - `No` means it is not a pure OA journal
+  - OA should not be treated as an early hard filter; direction match comes first, APC/OA issues can be checked later
+- Candidate-journal judgments from the first LetPub results:
+  - `Biochar`
+    - not suitable for the current line
+    - too centered on biochar, soil amendment, and carbon/environmental effects
+  - `Urban Forestry & Urban Greening`
+    - not suitable for the current agricultural water-management line
+    - more urban vegetation / urban ecology oriented
+  - `Environmental Technology & Innovation`
+    - not a first-choice venue
+    - could become relevant only if the work is reframed more as an environmental engineering / technical system paper
+  - `Journal of Geophysical Research: Biogeosciences`
+    - relatively the most interesting among those initial hits
+    - still not a first-tier target for the present deep-learning soil-moisture / warning framing
+- The initial LetPub hits confirmed an important negative lesson:
+  - keyword matching alone can surface journals with word-level similarity but poor real topic fit
+  - final targeting should rely on the actual journal scope and recent-paper patterns, not only on search-word overlap
+- Current venue-screening conclusion:
+  - the project should continue tracking two journal pools in parallel:
+    - remote sensing / hydrology / soil-moisture forecasting venues
+    - drought warning / agricultural water-management / decision-support venues
+  - the final submission lane should be chosen only after the warning-task framing, risk definition, and downstream metrics are finalized
+
+## 2026-05-29 Literature Review Context Sync
+- Current literature-review workspace is organized under `D:\study\p`.
+- The papers have been split into two value-based groups:
+  - `参考价值较高`
+  - `参考价值一般`
+- Each group now has its own summary file:
+  - `D:\study\p\参考价值较高\文献总结.txt`
+  - `D:\study\p\参考价值一般\文献总结.txt`
+- File naming in the grouped folders has been normalized to paper titles for easier LetPub lookup.
+- The summaries currently cover, for each paper:
+  - the core problem it tries to solve
+  - the main method or modeling idea
+  - dataset availability or reproducibility concerns
+  - evaluation metrics and, where useful, the main formulas
+- A Word version with formula objects has also been generated:
+  - `D:\study\p\文献总结_Word公式版.docx`
+- Important formatting note:
+  - local LaTeX compilation is unavailable in this environment
+  - the Word document therefore uses native Word equation objects rather than rendered LaTeX images
+  - visual DOCX rasterization could not be fully verified locally because the document conversion dependency is missing
+- Working conclusion so far:
+  - the selected set is already sufficient as a first-round reference base
+  - the higher-value folder is the main priority for writing and comparison
+  - the lower-value folder is still kept as backup context, mainly for method comparison and data-access checks
+
+## 2026-07-19 GEFS Correction And Scenario-Consistent SWAP Update
+
+- The weather-correction branch has completed its staged comparison rather than stopping after the first QM result:
+  - the original QM candidates failed the prelocked training-period / independent-2019 gates;
+  - expanded-year QM and QDM improved CRPS/Brier in several folds but generally worsened 7-day precipitation MAE;
+  - the final evidence-selected precipitation correction is `weekly_two_stage_linear_site_factor_shrink_a075`;
+  - its shrinkage alpha `0.75` was selected using 2015-2018 OOF evidence plus the 2019 validation role, with 2024 excluded from fitting and selection;
+  - the frozen candidate passed the new six-cycle 2024 confirmation on all prelocked requirements, although bootstrap confidence intervals still reflect a small number of cycles.
+- The corrected-GEFS-to-surrogate weather interface has been implemented and validated:
+  - precipitation keeps both raw and corrected values;
+  - temperature, VPD, wind, and shortwave pass through;
+  - VPD is converted to SWAP actual vapor pressure and shortwave is converted to kJ/m2/day;
+  - continuous irrigation remains constrained to `0-60 mm`.
+- A first join of corrected GEFS weather with the old 40 SWAP labels passed schema and formula checks but was correctly blocked from training because those labels had been generated with gridMET weather.
+- A new scenario-consistent SWAP smoke then reran `5 sites x 8 irrigation candidates` with the same corrected GEFS future weather used as model input:
+  - 40 candidate rows and 105 weather-injection audit rows were produced;
+  - all five sites completed;
+  - decision-history weather modifications: `0` rows;
+  - maximum SWAP-rain versus corrected-GEFS 7-day difference: `0.001659 mm`;
+  - maximum absolute fixed-0-100-cm water-balance residual: `0.283760 mm`;
+  - missing three-output values: `0`;
+  - status: `corrected_gefs_swap_three_output_smoke_passed_scenario_consistent_not_training_dataset`.
+- The one-cycle response-diversity diagnostic showed:
+  - P15 was dry (`0.980786 mm` corrected 7-day precipitation), had a `1431 kg/ha` CWDM response range, and selected `40 mm` with net gain `223.8`;
+  - P1 had only an `11 kg/ha` CWDM response range and no profitable irrigation;
+  - P2/P3/P4 had zero CWDM response on this date even though AET and final soil moisture changed;
+  - therefore the pipeline is responsive, but one date is not enough to characterize training coverage.
+- The next frozen step is a small 2015-2019 scenario-consistent pilot, not full generation or training:
+  - selected cycles: `2015-08-15`, `2016-08-15`, `2017-08-15`, `2018-07-15`, `2019-07-15`;
+  - each year contributes one complete five-site mid/late-season cycle chosen by maximum cross-site corrected 7-day precipitation range;
+  - training-year correction factors are OOF expanding-window artifacts with fit endpoints 2014/2015/2016/2017; 2019 uses factors fit through 2018;
+  - the final 2000-2019 artifact is forbidden for 2015-2019 pilot generation;
+  - expected scale: 875 member-site-day weather rows, 200 SWAP candidate labels, and 225 serial SWAP invocations;
+  - historical full-variable GEFS reforecast data is still missing; existing reforecast caches contain precipitation only;
+  - full-variable extraction must be tested locally for these five cycles before upload to the server;
+  - no full download, no surrogate training, no TTA, and no Git push have been authorized or performed.
+- Formal pilot files:
+  - `s2s_rtist_source/docs/superpowers/specs/2026-07-19-gefs-2015-2019-scenario-consistent-pilot-generation.md`
+  - `s2s_rtist_source/site_general_surrogate_eval/gefs_2015_2019_scenario_consistent_pilot_contract_v1.json`
+  - `s2s_rtist_source/site_general_surrogate_eval/gefs_2015_2019_scenario_consistent_pilot_plan_v1.csv`
+  - `s2s_rtist_source/site_general_surrogate_eval/gefs_2015_2019_scenario_consistent_pilot_cycle_evidence_v1.csv`
+
+## 2026-07-19 Historical GEFS Pilot Local Weather Completion
+
+- The bounded five-cycle full-variable GEFS extraction completed locally:
+  - selected byte-range inventory: `6,040,357,447` bytes, within the approved `6.5 GB` cap;
+  - output: `875` unique member-site-day rows covering five years, five sites, five members, and seven lead days;
+  - temporary GRIB files retained: `0`;
+  - no 2024 rows, no surrogate training, and no TTA.
+- Download and intermediate data were kept under `F:/s2s_rtist_source_data`; no relevant GEFS/ERA5 pilot data were found on C during the migration audit.
+- Year-specific precipitation correction completed with no factor-fit leakage:
+  - 2015-2018 use expanding OOF factors ending in 2014-2017; 2019 ends in 2018;
+  - output: `875` corrected member rows and `175` corrected five-member ensemble rows;
+  - local-day regrouping changed the regime only for `2015/P2`, from the old UTC-day extreme factor to the contract-required general factor;
+  - maximum weekly-total reconstruction error: `7.105427357601002e-15 mm`.
+- ERA5-predecision plus corrected-GEFS-future hybrid weather completed:
+  - `9,105` retained daily rows; the uploaded ERA5 archive ends on Dec 30 each year, after all July/August pilot horizons;
+  - corrected GEFS future rows: `175`;
+  - GEFS rows before decision dates: `0`;
+  - maximum future splice error: `0`.
+- Cleanup completed after final outputs were validated:
+  - local SWAP validation workspaces and decoded point/index caches were removed;
+  - actual remaining GRIB files: `0`;
+  - retained F-drive final CSV/JSON outputs total approximately `3.58 MB`.
+- Server runner is ready for `225` serial SWAP invocations with resumable per-year/site outputs and no server network download.
+- Local SWAP execution was stopped at the user's request; all physical label generation must run on the server.
+- Full repository unit test result after implementation: `221 tests OK`.
+
+## 2026-07-19 Historical Pilot Crop-Activity Gate
+
+- The first server-side formal pilot stopped at `2015-08-15/P1` after all eight irrigation candidates produced no crop rows.
+- The failure was traced to physical crop state rather than SWAP execution or output parsing:
+  - the last predecision crop record was `2015-08-10` with `DVS=2.00`;
+  - `restart_initial.end` reported `swcropharvest=1`;
+  - SWAP read the weather and reported normal completion, but the selected decision date was after harvest.
+- The user authorized adding a hard crop-activity constraint now and documenting the design change for the supervisor later.
+- The previously selected five cycles are now provisional. Before precipitation-range ranking, every candidate cycle must pass at all five sites:
+  - the predecision run ends at `D-1` and has a crop row on `D-1`;
+  - `DVS < 2.0` and `swcropharvest=0`;
+  - a `0 mm` irrigation restart produces all seven daily crop rows over `D...D+6`.
+- Alternative dates may use ERA5 future weather for initial crop-coverage screening only. Any replacement date must be rerun after its corrected GEFS future is downloaded and spliced before formal label generation.
+- The formal 200-candidate runner now requires a machine-readable final crop-gate CSV and rejects missing, failed, or provisional ERA5-only results.
+- A bounded server audit was added for the existing July 15 / August 15 candidates across 2015-2019: 10 cycles x 5 sites, using one prestate run plus one `0 mm` restart per site-date.
+- No local SWAP, surrogate training, TTA, or Git push was performed. Full repository unit test result after this change: `226 tests OK`.
+
+## 2026-07-19 Historical Pilot Crop-Gate Reselection And Weather Rebuild
+
+- The server crop-activity screen completed 10 candidate cycles x 5 sites:
+  - five cycles passed at all five sites;
+  - the old 2015-2017 August cycles passed at only 2, 1, and 2 sites respectively;
+  - 2018-07-15 and 2019-07-15 remained valid;
+  - the selected schedule is now 2015-2019 July 15 for every year.
+- The 2015-2017 July candidates initially passed with ERA5 future weather only, so their full-variable GEFS data were downloaded locally to F for final-weather reconstruction:
+  - selected byte ranges: `3,639,543,881` bytes, below the 6.5 GB batch cap;
+  - output: `525` member-site-day rows for three cycles;
+  - missing/nonfinite values: `0`; duplicates: `0`; retained GRIB files: `0`.
+- ecCodes 2.44.0 was installed in `F:/s2s_rtist_source_data/python_deps_gefs_v1`; the system Python and C drive were not modified.
+- The replacement download was safely interrupted at 81/105 products and later resumed from product-level point-record caches to completion.
+- The three replacement cycles were combined with the unchanged 2018/2019 source rows:
+  - replacement rows: `525`; retained rows: `350`; combined rows: `875`;
+  - the retained 2018/2019 rows matched the old source row-by-row within CSV floating-point read precision.
+- Frozen year-specific correction and `alpha=0.75` were reapplied without refitting:
+  - corrected member rows: `875`; ensemble rows: `175`; site-cycle rows: `25`;
+  - factor-fit leakage rows: `0`; 2024 rows: `0`;
+  - maximum weekly-total reconstruction error: `7.105427357601002e-15 mm`.
+- The early plan/evidence precipitation summaries for 2018/2019 were found to be stale; the source and corrected files themselves were consistent. The old summary was archived, and the main evidence/plan now use the verified corrected outputs.
+- The rebuilt hybrid weather passed all gates:
+  - total rows: `9,105`; corrected GEFS future rows: `175`;
+  - predecision GEFS rows: `0`; maximum future splice error: `0`;
+  - no surrogate training, TTA, or local SWAP was run.
+- The remaining step is a server-only `--selected-only` final crop gate using the corrected GEFS hybrid future. Formal 200-candidate generation remains blocked until that gate passes.
+- Full repository unit test result after the reselection and rebuild: `229 tests OK`.
+
+## 2026-07-19 Historical Pilot Final Corrected-GEFS Crop Gate
+
+- The server-only final crop gate `crop_activity_final_corrected_gefs_jul15_v2` completed after the corrected-GEFS hybrid was uploaded.
+- Final result:
+  - selected cycles: five July 15 cycles from 2015 through 2019;
+  - selected cycles checked: `5`; site-date rows: `25`;
+  - eligible site-date rows: `25`; failed site-cycles: `0`;
+  - cycles using provisional ERA5 future: `0`;
+  - status: `crop_activity_final_corrected_gefs_gate_passed`.
+- The contract is now marked ready for the bounded formal 200-candidate pilot. The old failed August run must not be resumed; the formal July run must use a new run ID and the final gate CSV as an explicit input.
+- This authorization covers only the already designed pilot label generation. Surrogate training, TTA, full historical generation, and Git push remain forbidden.
+
+## 2026-07-20 Formal Pilot Response Coverage And Date-Density Decision Gate
+
+- The formal July pilot response diagnostic completed on the server using all 200 SWAP candidate labels.
+- Coverage evidence:
+  - responsive site-cycles by positive CWDM range: `11/25`;
+  - profitable nonzero-irrigation site-cycles: `10/25`;
+  - years with at least one profitable nonzero irrigation decision: `5/5`;
+  - best irrigation distribution: `0 mm: 15`, `20 mm: 3`, `30 mm: 3`, `40 mm: 4`.
+- Response is strongly heterogeneous:
+  - P15 is profitable in 5/5 years;
+  - P1 is profitable in 2/5 years;
+  - P2, P3, and P4 are each profitable in only 1/5 years;
+  - all five sites respond in 2017, while only P15 responds profitably in 2015 and 2018.
+- A positive CWDM range alone is not a sufficient refinement trigger: 2019/P1 changes by only `2 kg/ha` and still selects `0 mm` after water cost.
+- One date per year cannot identify within-season date density. A teacher-decision gate was added with a recommended but unlocked two-stage proposal:
+  - weekly crop-active scan using `[0,20,30,40,60] mm` only to locate response anchors;
+  - formal eight-candidate generation at profitable anchors and their plus/minus one-day neighbors.
+- Additional SWAP generation, surrogate training, and TTA remain blocked until the teacher confirms the density policy, anchor definition, coarse irrigation set, scan interval rule, and expanded output budget.
+
+## 2026-07-20 GEFS Correction Model Selection Teacher Report
+
+- A first-part teacher report was written at `s2s_rtist_source/docs/analysis/2026-07-20-gefs-correction-model-selection-teacher-report-part1.md`.
+- The report records the full evidence chain:
+  - ordinary QM was unstable when expanded beyond the initially selected 2019 cycles;
+  - QDM improved CRPS/Brier/coverage but its seven-day volume-preserving daily allocation worsened daily MAE/RMSE, and all raw-allocation shrink candidates failed the daily RMSE gate;
+  - Shah-Mishra weekly two-stage linear scaling passed the prelocked OOF gates in the site-only grouping while global grouping failed heavy-event coverage;
+  - alpha shrinkage comparison selected `alpha=0.75` as the only candidate passing both 2015-2018 OOF and 2019 requirements.
+- The frozen project correction model remains `weekly_two_stage_linear_site_factor_shrink_a075`; this is a site-wise, seven-day-total, factor-shrunk adaptation of the Shah-Mishra method, not a claim that QM/QDM have no value in other probabilistic applications.
+
+## 2026-07-24 Formal GEFS Full-Weather Completion And Server Package
+
+- The formal exact-schedule GEFS download is complete: all `61/61` batches passed strict audits and all five annual raw-weather assemblies passed.
+  - 2015: `12 batches / 46 cycles / 2555 rows`.
+  - 2016: `13 / 52 / 2240`.
+  - 2017: `11 / 43 / 2345`.
+  - 2018: `14 / 54 / 2275`.
+  - 2019: `11 / 44 / 2415`.
+- Causal-history extraction and frozen six-variable correction are complete for every target year from 2015 through 2019. The final weather contains `11830` member rows, `239` cycles, and `338` site-cycles with five members and seven lead days. Missing, nonfinite, duplicate-key, causal-leakage, physical-order, and member-structure gates all passed.
+- The unified pre-packaging review passed with status `exact_schedule_2015_2019_corrected_weather_packaging_review_passed`. Its 75-file source manifest was independently rehashed with zero missing, size-mismatched, or hash-mismatched files.
+- The audited server archive is `s2s_rtist_source/gefs_exact_schedule_2015_2019_frozen_weather_server_v1.tar.gz`, size `3212600` bytes, SHA256 `c1d3a1cc5e5c4ce46c653048d67f92b30c5c5b42f972a27e4c71a4d157c62cdf`. It contains 79 files, no GRIB or raw-download cache, and 78 internally verified SHA256 entries.
+- The archive is locally ready but is not yet recorded as uploaded, extracted, or verified on the server. After the user uploads and verifies it, the next scientific gate is the one-date, eight-irrigation checkpoint branch smoke. No new SWAP label generation, surrogate training, or TTA has been run in this stage.

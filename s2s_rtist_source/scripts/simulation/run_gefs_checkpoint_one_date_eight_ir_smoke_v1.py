@@ -43,7 +43,11 @@ PRIMARY_OUTPUTS = [
     "soil_vwc_0_100cm_day06",
     "soil_vwc_0_100cm_day07",
 ]
-SWAP_WEATHER_FILES = ("weather.015", "WeatherOriginal.015")
+
+
+def swap_weather_filenames(year: int) -> tuple[str, str]:
+    suffix = f".{int(year) % 100:03d}"
+    return f"weather{suffix}", f"WeatherOriginal{suffix}"
 
 
 def sha256_file(path: Path) -> str:
@@ -292,11 +296,11 @@ def build_ensemble_mean_weather(
 
 
 def inject_future_weather(
-    workspace: Path, daily: pd.DataFrame
+    workspace: Path, daily: pd.DataFrame, *, year: int
 ) -> tuple[pd.DataFrame, dict[str, str]]:
     audit_frames = []
     hashes: dict[str, str] = {}
-    for filename in SWAP_WEATHER_FILES:
+    for filename in swap_weather_filenames(year):
         path = workspace / filename
         if not path.is_file():
             raise FileNotFoundError(f"missing SWAP weather file: {path}")
@@ -363,6 +367,9 @@ def build_audit(
     daily: pd.DataFrame,
     injection: pd.DataFrame,
     checkpoint: dict[str, Any],
+    site_id: str = "P1",
+    target_year: int = 2015,
+    next_gate: str = "expand_verified_checkpoint_branch_smoke_to_five_sites",
 ) -> dict[str, Any]:
     expected_rain = float(daily["precipitation_mm_corrected_mean"].sum())
     rain_error = float(
@@ -392,8 +399,8 @@ def build_audit(
             else "verified_checkpoint_one_date_eight_ir_swap_smoke_failed"
         ),
         "mandatory_gate_passed": passed,
-        "site_id": "P1",
-        "target_year": 2015,
+        "site_id": str(site_id),
+        "target_year": int(target_year),
         "decision_date": checkpoint["decision_date"],
         "checkpoint_date": checkpoint["checkpoint_date"],
         "checkpoint_equivalence_passed": True,
@@ -422,7 +429,7 @@ def build_audit(
         "surrogate_training_performed": False,
         "tta_performed": False,
         "next_gate": (
-            "expand_verified_checkpoint_branch_smoke_to_five_sites"
+            next_gate
             if passed
             else "repair_one_date_checkpoint_branch_smoke"
         ),
@@ -430,6 +437,8 @@ def build_audit(
 
 
 def run(args: argparse.Namespace) -> dict[str, Path]:
+    if pd.Timestamp(args.decision_date).year != int(args.year):
+        raise ValueError("decision date year does not match --year")
     checkpoint = validate_checkpoint(
         args.checkpoint_dir, args.checkpoint_audit_csv, args.decision_date
     )
@@ -441,7 +450,9 @@ def run(args: argparse.Namespace) -> dict[str, Path]:
     args.output_dir.mkdir(parents=True, exist_ok=False)
     workspace = args.output_dir / "workspace"
     shutil.copytree(args.source_workspace, workspace)
-    injection, weather_hashes = inject_future_weather(workspace, daily)
+    injection, weather_hashes = inject_future_weather(
+        workspace, daily, year=args.year
+    )
     copy_checkpoint(args.checkpoint_dir, workspace)
     candidates = run_checkpoint_branches(
         workspace=workspace,
@@ -469,6 +480,8 @@ def run(args: argparse.Namespace) -> dict[str, Path]:
         daily=daily,
         injection=injection,
         checkpoint=checkpoint,
+        site_id=args.site_id,
+        target_year=args.year,
     )
     outputs = {
         "candidates": args.output_dir / "gefs_checkpoint_one_date_eight_ir_candidates_v1.csv",

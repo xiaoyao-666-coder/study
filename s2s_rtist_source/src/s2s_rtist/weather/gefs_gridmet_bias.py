@@ -3,6 +3,7 @@
 
 from __future__ import annotations
 
+from concurrent.futures import ThreadPoolExecutor
 import re
 from datetime import date, datetime, time, timedelta, timezone
 from dataclasses import dataclass, replace
@@ -182,9 +183,9 @@ def fetch_selected_byte_ranges(
     ranges: Sequence[ByteRange],
     *,
     fetcher: Callable[[str, int, int], bytes],
+    workers: int = 1,
 ) -> bytes:
-    chunks: list[bytes] = []
-    for byte_range in ranges:
+    def fetch_range(byte_range: ByteRange) -> bytes:
         payload = fetcher(product_url, byte_range.start, byte_range.end)
         expected_length = byte_range.end - byte_range.start + 1
         if len(payload) != expected_length:
@@ -192,7 +193,13 @@ def fetch_selected_byte_ranges(
                 f"range {byte_range.start}-{byte_range.end} returned "
                 f"{len(payload)} bytes, expected {expected_length}"
             )
-        chunks.append(payload)
+        return payload
+
+    if int(workers) <= 1 or len(ranges) <= 1:
+        chunks = [fetch_range(byte_range) for byte_range in ranges]
+    else:
+        with ThreadPoolExecutor(max_workers=int(workers)) as executor:
+            chunks = list(executor.map(fetch_range, ranges))
     return b"".join(chunks)
 
 

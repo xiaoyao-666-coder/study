@@ -12,6 +12,7 @@ from scripts.simulation.run_gefs_checkpoint_one_date_eight_ir_smoke_v1 import (
     build_ensemble_mean_weather,
     parse_swap_weather_record,
     patch_swap_weather_file,
+    swap_weather_filenames,
     validate_checkpoint,
 )
 
@@ -43,6 +44,12 @@ def weather_fixture() -> pd.DataFrame:
 
 
 class GefsCheckpointBranchSmokeTests(unittest.TestCase):
+    def test_weather_filenames_follow_target_year(self) -> None:
+        self.assertEqual(
+            swap_weather_filenames(2019),
+            ("weather.019", "WeatherOriginal.019"),
+        )
+
     def test_weather_patch_preserves_predecision_rows_and_etref(self) -> None:
         text = (
             "header\n"
@@ -164,8 +171,12 @@ class GefsCheckpointBranchSmokeTests(unittest.TestCase):
             daily=daily,
             injection=injection,
             checkpoint=checkpoint,
+            site_id="P15",
+            target_year=2015,
         )
         self.assertTrue(audit["mandatory_gate_passed"])
+        self.assertEqual(audit["site_id"], "P15")
+        self.assertEqual(audit["target_year"], 2015)
         self.assertEqual(audit["next_gate"], "expand_verified_checkpoint_branch_smoke_to_five_sites")
 
 

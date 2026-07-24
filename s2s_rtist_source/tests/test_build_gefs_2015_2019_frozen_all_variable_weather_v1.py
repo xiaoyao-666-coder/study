@@ -135,6 +135,29 @@ class FrozenAllVariableWeatherTests(unittest.TestCase):
         )
         self.assertTrue(np.allclose(output["precipitation_mm"], output["precipitation_mm_raw"] * 0.625))
 
+    def test_accepts_one_formal_year_with_multiple_exact_schedule_cycles(self) -> None:
+        raw = raw_weather_fixture().loc[
+            lambda frame: frame["decision_date"].str.startswith("2015-")
+        ].copy()
+        second = raw.copy()
+        second["decision_date"] = "2015-07-13"
+        second["forecast_init_utc"] = "2015-07-13T00:00:00Z"
+        second["local_date"] = (
+            pd.to_datetime(second["local_date"]) + pd.Timedelta(days=7)
+        ).dt.strftime("%Y-%m-%d")
+        raw = pd.concat([raw, second], ignore_index=True)
+        cv, validation = factor_inputs()
+        output, weekly, audit = build_frozen_weather(
+            raw_weather=raw,
+            nonprecip_branches=branch_fixture(raw),
+            nonprecip_policy=policy_fixture(),
+            precipitation_factors=load_causal_precipitation_factors(cv, validation),
+        )
+        self.assertEqual(len(output), 350)
+        self.assertEqual(len(weekly), 10)
+        self.assertEqual(audit["cycle_count"], 2)
+        self.assertTrue(audit["mandatory_structural_gate_passed"])
+
     def test_precipitation_factor_leakage_is_rejected(self) -> None:
         cv, validation = factor_inputs()
         cv.loc[cv["validation_year"].eq(2017), "fit_last_year"] = 2017
