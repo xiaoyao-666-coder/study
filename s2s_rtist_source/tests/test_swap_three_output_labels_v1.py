@@ -358,6 +358,40 @@ class SwapConfigTests(unittest.TestCase):
             self.assertEqual(manifest["irrigation_mm"], 60.0)
             self.assertIn("result_restart.vap", manifest["files"])
 
+    def test_raw_audit_preserves_logical_endpoint_with_simulated_fallback(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            source = root / "source"
+            source.mkdir()
+            for name in (
+                "result_restart.inc",
+                "result_restart.vap",
+                "result_restart.crp",
+            ):
+                (source / name).write_text(name, encoding="utf-8")
+
+            target = preserve_candidate_raw_outputs(
+                date_t="06-Jun-2015",
+                decision_doy=157,
+                irrigation_mm=59.9,
+                selection_irrigation_mm=60.0,
+                irrigation_options_mm=[0.0, 10.0, 60.0],
+                source_dir=source,
+                audit_root=root / "audit",
+                nprintday=48,
+            )
+
+            self.assertIsNotNone(target)
+            assert target is not None
+            self.assertEqual(target.name, "ir_60mm")
+            manifest = json.loads(
+                (target / "raw_audit_manifest.json").read_text(encoding="utf-8")
+            )
+            self.assertEqual(manifest["requested_ir_mm"], 60.0)
+            self.assertEqual(manifest["simulated_ir_mm"], 59.9)
+            self.assertTrue(manifest["numerical_endpoint_fallback"])
+            self.assertTrue(manifest["numerical_irrigation_fallback"])
+
 
 if __name__ == "__main__":
     unittest.main()

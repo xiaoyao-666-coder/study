@@ -10,8 +10,17 @@ from scripts.simulation.run_gefs_checkpoint_one_date_eight_ir_smoke_v1 import (
     IRRIGATION_OPTIONS_MM,
     build_audit,
     build_ensemble_mean_weather,
+    endpoint_fallback_metadata,
     parse_swap_weather_record,
+    patch_swap_dtmax_text,
+    patch_swap_max_backtr_text,
+    patch_swap_maxit_text,
+    patch_swap_swdivd_text,
     patch_swap_weather_file,
+    patch_workspace_max_backtr,
+    patch_workspace_maxit,
+    patch_workspace_swdivd,
+    read_swap_dtmax_days,
     swap_weather_filenames,
     validate_checkpoint,
 )
@@ -44,6 +53,101 @@ def weather_fixture() -> pd.DataFrame:
 
 
 class GefsCheckpointBranchSmokeTests(unittest.TestCase):
+    def test_dtmax_patch_changes_only_the_numerical_value(self) -> None:
+        original = (
+            " DTMIN = 1.0d-7 ! minimum\n"
+            " DTMAX = 0.2 ! Maximum timestep, [0.01..0.5 d, R]\n"
+            " MaxIt = 30 ! iterations\n"
+        )
+        patched = patch_swap_dtmax_text(original, 0.05)
+        self.assertIn("DTMAX = 0.05 ! Maximum timestep", patched)
+        self.assertIn("DTMIN = 1.0d-7", patched)
+        self.assertIn("MaxIt = 30", patched)
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "Swap1.swp"
+            path.write_text(patched, encoding="utf-8")
+            self.assertAlmostEqual(read_swap_dtmax_days(path), 0.05)
+
+    def test_dtmax_patch_rejects_out_of_range_or_ambiguous_input(self) -> None:
+        with self.assertRaisesRegex(ValueError, "within"):
+            patch_swap_dtmax_text("DTMAX = 0.2\n", 0.001)
+        with self.assertRaisesRegex(ValueError, "found 2"):
+            patch_swap_dtmax_text("DTMAX = 0.2\nDTMAX = 0.1\n", 0.05)
+
+    def test_maxit_patch_changes_only_iteration_limit(self) -> None:
+        original = (
+            "MaxIt = 30 ! Maximum number of iteration cycles [5,100 -,I]\n"
+            "MaxBackTr = 3\n"
+        )
+        patched = patch_swap_maxit_text(original, 100)
+        self.assertIn("MaxIt = 100 ! Maximum number", patched)
+        self.assertIn("MaxBackTr = 3", patched)
+        with self.assertRaisesRegex(ValueError, "within"):
+            patch_swap_maxit_text(original, 101)
+
+    def test_workspace_maxit_patch_updates_numerical_inputs(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            workspace = Path(directory)
+            for name in ("SwapOriginal.swp", "Swap1.swp", "swap.swp"):
+                (workspace / name).write_text("MaxIt = 30\n", encoding="utf-8")
+            observed = patch_workspace_maxit(workspace, 100)
+            self.assertEqual(observed, 100)
+            for name in ("SwapOriginal.swp", "Swap1.swp", "swap.swp"):
+                self.assertEqual(
+                    (workspace / name).read_text(encoding="utf-8"),
+                    "MaxIt = 100\n",
+                )
+
+    def test_max_backtr_patch_changes_only_backtrack_limit(self) -> None:
+        original = "MaxIt = 30\nMaxBackTr = 3 ! back tracks [1,10 -,I]\n"
+        patched = patch_swap_max_backtr_text(original, 10)
+        self.assertIn("MaxIt = 30", patched)
+        self.assertIn("MaxBackTr = 10 ! back tracks", patched)
+        with self.assertRaisesRegex(ValueError, "within"):
+            patch_swap_max_backtr_text(original, 11)
+
+    def test_workspace_max_backtr_patch_updates_numerical_inputs(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            workspace = Path(directory)
+            for name in ("SwapOriginal.swp", "Swap1.swp", "swap.swp"):
+                (workspace / name).write_text("MaxBackTr = 3\n", encoding="utf-8")
+            observed = patch_workspace_max_backtr(workspace, 10)
+            self.assertEqual(observed, 10)
+            for name in ("SwapOriginal.swp", "Swap1.swp", "swap.swp"):
+                self.assertEqual(
+                    (workspace / name).read_text(encoding="utf-8"),
+                    "MaxBackTr = 10\n",
+                )
+
+    def test_swdivd_patch_changes_only_assignment(self) -> None:
+        original = (
+            "SWDIVD = 0 ! vertical distribution [Y=1, N=0]\n"
+            "* If SWDIVD = 1, specify COFANI\n"
+            "COFANI = 1.0 1.0\n"
+        )
+        patched = patch_swap_swdivd_text(original, 1)
+        self.assertIn("SWDIVD = 1 ! vertical distribution", patched)
+        self.assertIn("* If SWDIVD = 1", patched)
+        self.assertIn("COFANI = 1.0 1.0", patched)
+        with self.assertRaisesRegex(ValueError, "0 or 1"):
+            patch_swap_swdivd_text(original, 2)
+
+    def test_workspace_swdivd_patch_records_every_drainage_file(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            workspace = Path(directory)
+            for name in ("swap.dra", "SwapOriginal.dra"):
+                (workspace / name).write_text(
+                    "SWDIVD = 0\nCOFANI = 1.0 1.0\n",
+                    encoding="utf-8",
+                )
+            patched = patch_workspace_swdivd(workspace, 1)
+            self.assertCountEqual(patched, ["SwapOriginal.dra", "swap.dra"])
+            for name in patched:
+                self.assertIn(
+                    "SWDIVD = 1",
+                    (workspace / name).read_text(encoding="utf-8"),
+                )
+
     def test_weather_filenames_follow_target_year(self) -> None:
         self.assertEqual(
             swap_weather_filenames(2019),
@@ -173,11 +277,52 @@ class GefsCheckpointBranchSmokeTests(unittest.TestCase):
             checkpoint=checkpoint,
             site_id="P15",
             target_year=2015,
+            restart_nprintday=96,
         )
         self.assertTrue(audit["mandatory_gate_passed"])
         self.assertEqual(audit["site_id"], "P15")
         self.assertEqual(audit["target_year"], 2015)
+        self.assertEqual(audit["restart_nprintday"], 96)
         self.assertEqual(audit["next_gate"], "expand_verified_checkpoint_branch_smoke_to_five_sites")
+
+    def test_endpoint_fallback_metadata_accepts_only_declared_adjustment(self) -> None:
+        candidates = pd.DataFrame(
+            {
+                "ir": [0.0, 20.0],
+                "requested_ir_mm": [0.0, 20.0],
+                "simulated_ir_mm": [0.0, 19.9],
+                "numerical_endpoint_fallback": [False, True],
+                "numerical_endpoint_fallback_delta_mm": [0.0, -0.1],
+            }
+        )
+        accepted = endpoint_fallback_metadata(candidates, {20.0: 19.9})
+        rejected = endpoint_fallback_metadata(candidates, {20.0: 19.8})
+        self.assertTrue(accepted["valid"])
+        self.assertEqual(accepted["count"], 1)
+        self.assertEqual(accepted["requested_values_mm"], [20.0])
+        self.assertEqual(accepted["simulated_values_mm"], [19.9])
+        self.assertFalse(rejected["valid"])
+
+    def test_endpoint_fallback_metadata_accepts_declared_second_level(self) -> None:
+        candidates = pd.DataFrame(
+            {
+                "ir": [0.0, 60.0],
+                "requested_ir_mm": [0.0, 60.0],
+                "simulated_ir_mm": [0.0, 59.8],
+                "numerical_endpoint_fallback": [False, True],
+                "numerical_endpoint_fallback_delta_mm": [0.0, -0.2],
+                "numerical_irrigation_fallback_attempt_count": [0, 2],
+            }
+        )
+        accepted = endpoint_fallback_metadata(
+            candidates, {60.0: (59.9, 59.8)}
+        )
+        rejected = endpoint_fallback_metadata(candidates, {60.0: (59.9,)})
+        self.assertTrue(accepted["valid"])
+        self.assertEqual(accepted["maximum_attempt_count"], 2)
+        self.assertEqual(accepted["second_level_count"], 1)
+        self.assertAlmostEqual(accepted["maximum_absolute_adjustment_mm"], 0.2)
+        self.assertFalse(rejected["valid"])
 
 
 if __name__ == "__main__":

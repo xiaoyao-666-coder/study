@@ -13,6 +13,7 @@ Run inside a clean copied Maize directory on the Linux server.
 
 from __future__ import annotations
 
+import json
 import shutil
 import subprocess
 from datetime import datetime
@@ -256,11 +257,45 @@ def write_candidate_artifacts(label: str, rows: list[dict], irrigation_options: 
         pd.DataFrame(candidate_errors).to_csv(f"restart_decision_candidate_errors_{label}.csv", index=False)
 
 
-def run_one_date(date_t: str, decision_doy: int, irrigation_options_mm: list[float] | None = None) -> pd.DataFrame:
+def run_one_date(
+    date_t: str,
+    decision_doy: int,
+    irrigation_options_mm: list[float] | None = None,
+    numerical_endpoint_fallbacks_mm: dict[
+        float, float | list[float] | tuple[float, ...]
+    ]
+    | None = None,
+) -> pd.DataFrame:
     label = safe_label(date_t)
     end_doy = inclusive_horizon_end_doy(decision_doy, HORIZON_DAYS)
     irrigation_options = irrigation_options_mm if irrigation_options_mm is not None else IRRIGATION_OPTIONS_MM
     irrigation_options = [float(v) for v in irrigation_options]
+    irrigation_fallbacks: dict[float, tuple[float, ...]] = {}
+    for requested_raw, simulated_raw in (
+        numerical_endpoint_fallbacks_mm or {}
+    ).items():
+        requested = float(requested_raw)
+        values = (
+            simulated_raw
+            if isinstance(simulated_raw, (list, tuple))
+            else (simulated_raw,)
+        )
+        simulated_values = tuple(float(value) for value in values)
+        if (
+            requested <= 0.0
+            or requested > 60.0
+            or not simulated_values
+            or len(simulated_values) != len(set(simulated_values))
+            or any(
+                simulated < 0.0 or simulated >= requested
+                for simulated in simulated_values
+            )
+        ):
+            raise ValueError(
+                "numerical irrigation fallbacks must be unique downward "
+                "adjustments for positive candidates within [0, 60] mm"
+            )
+        irrigation_fallbacks[requested] = simulated_values
 
     print(f"\n=== {date_t}: pre-decision state ===", flush=True)
     configure_irrigation(date_t, None)
@@ -272,10 +307,79 @@ def run_one_date(date_t: str, decision_doy: int, irrigation_options_mm: list[flo
     candidate_errors = []
     for ir in irrigation_options:
         print(f"{date_t}: running restart candidate {ir} mm", flush=True)
+        primary_error = None
+        simulated_ir = float(ir)
+        fallback_used = False
+        fallback_attempted_values: list[float] = []
+        fallback_errors: list[Exception] = []
         try:
-            configure_irrigation(date_t, ir)
+            configure_irrigation(date_t, simulated_ir)
             set_swp_for_restart(decision_doy, end_doy, outfil="result_restart")
             run_swap(f"dataset_{label}_restart_ir_{safe_ir_label(float(ir))}.log")
+        except Exception as exc:
+            primary_error = exc
+            fallback_values = irrigation_fallbacks.get(float(ir), ())
+            if not fallback_values:
+                candidate_errors.append(
+                    {
+                        "date_t": date_t,
+                        "decision_doy": decision_doy,
+                        "horizon_end_doy": end_doy,
+                        "ir": ir,
+                        "error_type": type(exc).__name__,
+                        "error": str(exc),
+                    }
+                )
+                continue
+            for attempt_index, fallback_ir in enumerate(fallback_values, start=1):
+                simulated_ir = float(fallback_ir)
+                fallback_attempted_values.append(simulated_ir)
+                print(
+                    f"{date_t}: candidate {ir:g} mm failed; retrying numerical "
+                    f"fallback {attempt_index}/{len(fallback_values)} at "
+                    f"{simulated_ir:g} mm",
+                    flush=True,
+                )
+                try:
+                    configure_irrigation(date_t, simulated_ir)
+                    set_swp_for_restart(
+                        decision_doy, end_doy, outfil="result_restart"
+                    )
+                    run_swap(
+                        f"dataset_{label}_restart_ir_{safe_ir_label(float(ir))}"
+                        f"_fallback_{safe_ir_label(simulated_ir)}.log"
+                    )
+                    fallback_used = True
+                    break
+                except Exception as fallback_exc:
+                    fallback_errors.append(fallback_exc)
+            if not fallback_used:
+                fallback_exc = fallback_errors[-1]
+                candidate_errors.append(
+                    {
+                        "date_t": date_t,
+                        "decision_doy": decision_doy,
+                        "horizon_end_doy": end_doy,
+                        "ir": ir,
+                        "error_type": type(fallback_exc).__name__,
+                        "error": str(fallback_exc),
+                        "numerical_endpoint_fallback_attempted": True,
+                        "numerical_endpoint_fallback_simulated_ir_mm": simulated_ir,
+                        "numerical_irrigation_fallback_attempted": True,
+                        "numerical_irrigation_fallback_simulated_ir_mm": simulated_ir,
+                        "numerical_irrigation_fallback_attempt_count": len(
+                            fallback_attempted_values
+                        ),
+                        "numerical_irrigation_fallback_attempted_values_mm": json.dumps(
+                            fallback_attempted_values
+                        ),
+                        "requested_candidate_error_type": type(exc).__name__,
+                        "requested_candidate_error": str(exc),
+                    }
+                )
+                continue
+
+        try:
             physical_labels = extract_candidate_labels(
                 pre_crop_path=Path("result_forec.crp"),
                 pre_profile_path=Path("result_forec.vap"),
@@ -289,8 +393,9 @@ def run_one_date(date_t: str, decision_doy: int, irrigation_options_mm: list[flo
             raw_audit_dir = preserve_candidate_raw_outputs(
                 date_t=date_t,
                 decision_doy=decision_doy,
-                irrigation_mm=ir,
+                irrigation_mm=simulated_ir,
                 irrigation_options_mm=irrigation_options,
+                selection_irrigation_mm=float(ir),
                 nprintday=RESTART_NPRINTDAY,
             )
             rows.append(
@@ -300,6 +405,43 @@ def run_one_date(date_t: str, decision_doy: int, irrigation_options_mm: list[flo
                     "horizon_end_doy": end_doy,
                     "horizon_days": HORIZON_DAYS,
                     "ir": ir,
+                    "requested_ir_mm": float(ir),
+                    "simulated_ir_mm": simulated_ir,
+                    "numerical_endpoint_fallback": fallback_used,
+                    "numerical_endpoint_fallback_delta_mm": simulated_ir - float(ir),
+                    "numerical_irrigation_fallback": fallback_used,
+                    "numerical_irrigation_fallback_delta_mm": simulated_ir - float(ir),
+                    "numerical_irrigation_fallback_attempt_count": len(
+                        fallback_attempted_values
+                    ),
+                    "numerical_irrigation_fallback_attempted_values_mm": json.dumps(
+                        fallback_attempted_values
+                    ),
+                    "numerical_irrigation_fallback_failed_values_mm": json.dumps(
+                        fallback_attempted_values[:-1] if fallback_used else []
+                    ),
+                    "numerical_endpoint_fallback_policy": (
+                        "positive_candidate_sequential_retry_minus_0p1_minus_0p2mm_v2"
+                        if fallback_used
+                        else "not_triggered"
+                    ),
+                    "numerical_irrigation_fallback_policy": (
+                        "positive_candidate_sequential_retry_minus_0p1_minus_0p2mm_v2"
+                        if fallback_used
+                        else "not_triggered"
+                    ),
+                    "numerical_endpoint_fallback_trigger_error_type": (
+                        type(primary_error).__name__ if primary_error is not None else ""
+                    ),
+                    "numerical_endpoint_fallback_trigger_error": (
+                        str(primary_error) if primary_error is not None else ""
+                    ),
+                    "numerical_irrigation_fallback_trigger_error_type": (
+                        type(primary_error).__name__ if primary_error is not None else ""
+                    ),
+                    "numerical_irrigation_fallback_trigger_error": (
+                        str(primary_error) if primary_error is not None else ""
+                    ),
                     "swap_version": "4.0.1",
                     "water_depth_unit": "mm",
                     "flux_rate_source_unit": "cm/day",
@@ -323,6 +465,9 @@ def run_one_date(date_t: str, decision_doy: int, irrigation_options_mm: list[flo
                     "ir": ir,
                     "error_type": type(exc).__name__,
                     "error": str(exc),
+                    "simulated_ir_mm": simulated_ir,
+                    "numerical_endpoint_fallback_used": fallback_used,
+                    "numerical_irrigation_fallback_used": fallback_used,
                 }
             )
     if candidate_errors:
