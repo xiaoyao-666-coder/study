@@ -51,8 +51,9 @@ L = L_profit + lambda_balance * L_balance + lambda_flux * L_flux
 - `L_flux`: MSE of the residual-flux head, divided by the squared training-only
   residual-flux standard deviation.
 
-Every scale is fitted on 2015-2018 only and clamped to at least `1e-6` (or
-`1 mm` for the water-throughput scale). Direct AET loss, direct VWC loss,
+Every scale is fitted on 2015-2018 only. The net-gain scale has a `1e-6`
+floor; the water-throughput and residual-flux scales have a physical `1 mm`
+floor. Direct AET loss, direct VWC loss,
 benefit classification, ranking loss, soft regret, exact-match loss, and
 decision-gate loss are prohibited. The zero-irrigation net-gain anchor remains
 an architectural constraint, not an extra loss.
