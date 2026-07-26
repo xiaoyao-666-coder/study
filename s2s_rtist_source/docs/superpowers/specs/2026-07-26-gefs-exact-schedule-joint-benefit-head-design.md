@@ -1,4 +1,10 @@
-# GEFS Exact-Schedule Joint Benefit Head
+# GEFS Exact-Schedule Joint Benefit Head (Superseded)
+
+> Superseded on 2026-07-26 before packaging or server execution. The proposed
+> benefit-classification BCE and direct AET/VWC supervision do not match the
+> teacher-confirmed formal loss. This document is retained only as an audit of
+> a rejected design. The replacement is
+> `2026-07-26-gefs-three-output-physics-pretraining-design.md`.
 
 ## Purpose
 
