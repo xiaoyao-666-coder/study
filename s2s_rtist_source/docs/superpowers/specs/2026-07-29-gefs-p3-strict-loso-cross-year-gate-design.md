@@ -24,7 +24,8 @@ The source experts retain all four outputs:
 
 Every source-expert checkpoint is selected only by the existing four-output
 `composite` criterion. Historical `profit`, `direct`, and `ranking` tracks are
-not candidates in this protocol.
+not candidates in this protocol. The balance-loss weight is fixed at the
+formal incumbent value `lambda_balance=1.0`; it is not searched by fold.
 
 ## Evidence Boundary
 
@@ -124,11 +125,13 @@ is fitted on historical P3 gate-training cycles within each outer fold.
 
 ## Gate Model And Fallback
 
-The only candidate gate is deterministic L2-regularized logistic regression
-with `solver="liblinear"`, `C=1.0`, `class_weight=None`,
-`random_state=20260729`, `max_iter=1000`, a fixed decision threshold of `0.5`,
-and no hyperparameter sweep. An exact probability tie routes to P15. The
-earlier proposed threshold of `0.75` is rejected because it was suggested
+The only candidate gate is deterministic L2-regularized logistic regression.
+To avoid adding a scikit-learn dependency, it is solved with a NumPy
+Newton/IRLS implementation minimizing summed binary cross-entropy plus
+`0.5 * ||weights||^2`; the intercept is not regularized. The solver uses
+`max_iter=100`, parameter tolerance `1e-10`, a fixed decision threshold of
+`0.5`, and no hyperparameter sweep. An exact probability tie routes to P15.
+The earlier proposed threshold of `0.75` is rejected because it was suggested
 after inspecting 2019 results.
 
 If an outer fold has fewer than eight actionable gate-training cycles, contains
