@@ -17,7 +17,7 @@ Place the ZIP in the project root with the GUI transfer workflow, then run:
 
 ```bash
 cd /media/data_hot/lzx_projs/soil_moisture_otw/s2s_rtist_source
-printf '%s  %s\n' '<ZIP_SHA256>' 'gefs_p3_2022_b2_independent_protocol_freeze_20260731_v1.zip' | sha256sum -c -
+printf '%s  %s\n' '82215AB1EA78FDA7CF193BEBEC93817785BD28977219B68644648DABAA655E1F6' 'gefs_p3_2022_b2_independent_protocol_freeze_20260731_v1.zip' | sha256sum -c -
 test ! -e /media/data_hot/lzx_projs/soil_moisture_otw/s2s_rtist_source/.package_verify_gefs_p3_2022_b2_independent_protocol_20260731_v1
 mkdir /media/data_hot/lzx_projs/soil_moisture_otw/s2s_rtist_source/.package_verify_gefs_p3_2022_b2_independent_protocol_20260731_v1
 unzip -q /media/data_hot/lzx_projs/soil_moisture_otw/s2s_rtist_source/gefs_p3_2022_b2_independent_protocol_freeze_20260731_v1.zip -d /media/data_hot/lzx_projs/soil_moisture_otw/s2s_rtist_source/.package_verify_gefs_p3_2022_b2_independent_protocol_20260731_v1
