@@ -64,13 +64,13 @@ class P32022Era5TrunkScheduleFreezeTests(unittest.TestCase):
     def test_independent_protocol_binds_b2_and_source_hashes(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
+            schedule_rule = dict(trunk2022.SCHEDULE_RULE)
+            schedule_rule["target_site"] = schedule_rule.pop("site_id")
+            schedule_rule["trunk_weather_source"] = "ERA5_2022_observed_daily_weather"
             protocol = {
                 "status": "p3_2022_b2_independent_protocol_frozen_before_target_data_access",
                 "target": {"site_id": "P3", "target_year": 2022},
-                "schedule_rule": {
-                    **trunk2022.SCHEDULE_RULE,
-                    "trunk_weather_source": "ERA5_2022_observed_daily_weather",
-                },
+                "schedule_rule": schedule_rule,
             }
             audit = {
                 "status": "p3_2022_b2_independent_protocol_frozen_before_target_data_access",

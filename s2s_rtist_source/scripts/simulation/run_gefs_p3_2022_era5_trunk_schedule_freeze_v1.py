@@ -108,7 +108,8 @@ def validate_independent_protocol(root: Path) -> dict[str, Any]:
     ):
         raise ValueError("independent protocol is not eligible for trunk generation")
     for key, expected in SCHEDULE_RULE.items():
-        protocol_value = protocol.get("schedule_rule", {}).get(key)
+        protocol_key = "target_site" if key == "site_id" else key
+        protocol_value = protocol.get("schedule_rule", {}).get(protocol_key)
         if key == "trunk_weather_source":
             protocol_value = str(protocol_value).replace("observed_", "")
         if key == "harvest_month_day":
