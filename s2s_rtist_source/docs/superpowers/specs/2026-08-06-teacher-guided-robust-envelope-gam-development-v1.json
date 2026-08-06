@@ -1,0 +1,57 @@
+{
+  "protocol_id": "teacher-guided-robust-envelope-gam-development-v1",
+  "frozen_at": "2026-08-06",
+  "data": {
+    "development_years": [2015, 2016, 2017, 2018],
+    "reused_context_year": 2019,
+    "sealed_final_test_year": 2024,
+    "sites": ["P1", "P2", "P3", "P4", "P15"],
+    "candidate_count_per_cycle": 8,
+    "dataset_sha256": "3470776d0fa29928b27e0099fc5a84d6fc9f8a84c1c778b1def6325f80fd2917",
+    "contract_sha256": "b523800533c28b7dc25e682c0e6dd842cd406c41b710b81db4e8ca6901b46880"
+  },
+  "source_development": {
+    "protocol_id": "teacher-guided-hierarchical-gam-nested-shared-selection-development-v2",
+    "formal_variant": "GAM-VC",
+    "must_have_passed_gate": true,
+    "reuse_selected_penalties_without_search": true
+  },
+  "validation": {
+    "rolling_year_folds": [
+      {"train_years": [2015], "validation_year": 2016},
+      {"train_years": [2015, 2016], "validation_year": 2017},
+      {"train_years": [2015, 2016, 2017], "validation_year": 2018}
+    ],
+    "strict_outer_fold_count": 15,
+    "validation_cycle_count": 196,
+    "site_cycle_counts": {"P1": 38, "P2": 38, "P3": 41, "P4": 39, "P15": 40},
+    "held_out_site_uses_shared_terms_only": true
+  },
+  "ensemble": {
+    "jackknife_model_count_per_fold": 4,
+    "source_site_count_per_submodel": 3,
+    "decision_target": "minimum_incremental_net_gain_across_submodels",
+    "other_output_aggregation": "arithmetic_mean"
+  },
+  "continuous_optimization": {
+    "range_mm": [0.0, 60.0],
+    "deployment_resolution_mm": 0.000001,
+    "dense_diagnostic_step_mm": 0.25,
+    "maximum_dense_gain_gap": 0.05,
+    "candidate_sources": ["interval_boundaries", "stationary_points", "pairwise_intersections"],
+    "dense_grid_used_for_recommendation": false,
+    "tie_break": "smaller_irrigation"
+  },
+  "penalties": {"new_search_performed": false, "reuse_outer_fold_selected_values": true},
+  "forbidden": {
+    "2019_rows_read_for_training_or_selection": true,
+    "2019_features_read": true,
+    "2019_targets_read": true,
+    "2024_rows_read": true,
+    "swap_rerun": true,
+    "moe_training": true,
+    "tta": true,
+    "model_promotion": true
+  },
+  "passing_action": "authorize_2015_2018_robust_envelope_development_swap_protocol_design_only"
+}
