@@ -12,6 +12,12 @@
   },
   "source_development": {
     "protocol_id": "teacher-guided-hierarchical-gam-nested-shared-selection-development-v2",
+    "protocol_filename": "2026-08-05-teacher-guided-hierarchical-gam-nested-shared-selection-development-v2.json",
+    "protocol_sha256": "665d43c232107b50b4d14901faae398ebf71a0837ca852ad610c77ba7ce9d797",
+    "gate_sha256": "0c953c7e9b0282908a80e9480a949ab48c5d454ef66e55bda5461cc44d45cf70",
+    "audit_sha256": "d53965705f36ead1a47c72077fce2bb37ae4c03ef0ffc31e3242454e618f16cc",
+    "fold_metrics_filename": "gam_variant_fold_metrics_v1.csv",
+    "fold_metrics_sha256": "e1bde65852d62fadeef03c71a18a25bba462eb27dc4590d3ec4b727f2c0d390b",
     "formal_variant": "GAM-VC",
     "must_have_passed_gate": true,
     "reuse_selected_penalties_without_search": true

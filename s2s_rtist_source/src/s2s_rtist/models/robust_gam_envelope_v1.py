@@ -52,8 +52,11 @@ def _polynomial_on_interval(
     samples = lower + (upper - lower) * fractions
     values = _evaluate(function, samples)
     coefficients = np.polynomial.polynomial.polyfit(fractions, values, deg=3)
-    reconstructed = np.polynomial.polynomial.polyval(fractions, coefficients)
-    residual = float(np.max(np.abs(reconstructed - values)))
+    check_fractions = np.asarray([0.125, 0.5, 0.875], dtype=np.float64)
+    check_samples = lower + (upper - lower) * check_fractions
+    check_values = _evaluate(function, check_samples)
+    reconstructed = np.polynomial.polynomial.polyval(check_fractions, coefficients)
+    residual = float(np.max(np.abs(reconstructed - check_values)))
     if residual > reconstruction_tolerance:
         raise ValueError(
             "objective is not cubic on the frozen spline interval: "
