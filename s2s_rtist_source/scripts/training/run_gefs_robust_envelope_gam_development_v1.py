@@ -3,8 +3,6 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
-import math
-import os
 import time
 from dataclasses import dataclass
 from pathlib import Path
@@ -27,14 +25,10 @@ from scripts.diagnostics.audit_gefs_gam_state_interaction_features_v1 import (
     CONTRACT_NAME,
     DATASET_NAME,
     EXPECTED_IRRIGATION_GRID,
-    EXPECTED_YEAR_ROW_COUNTS,
     SOURCE_AUDIT_NAME,
     STATE_COLUMNS,
 )
-from scripts.evaluation.evaluate_gefs_hierarchical_gam_bspline_development_v1 import (
-    prediction_metrics,
-    write_json,
-)
+from scripts.evaluation.evaluate_gefs_hierarchical_gam_bspline_development_v1 import prediction_metrics
 from scripts.evaluation.optimize_gefs_hierarchical_gam_continuous_v1 import optimize_cycle
 from s2s_rtist.models.gefs_hierarchical_gam_bspline_v1 import GAM_VC, HierarchicalGamBSpline
 from s2s_rtist.models.robust_gam_envelope_v1 import (
