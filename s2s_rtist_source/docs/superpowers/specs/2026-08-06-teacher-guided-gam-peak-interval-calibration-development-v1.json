@@ -1,0 +1,126 @@
+{
+  "protocol_id": "teacher-guided-gam-peak-interval-calibration-development-v1",
+  "frozen_at": "2026-08-06",
+  "design": {
+    "filename": "2026-08-06-teacher-guided-gam-peak-interval-calibration-design.md",
+    "sha256": "d474d8f8bed94973504274126a36509a6cdd83dbbead112d7e554bb0c2212e3d"
+  },
+  "data": {
+    "development_years": [2015, 2016, 2017, 2018],
+    "development_row_count": 2152,
+    "development_cycle_count": 269,
+    "reused_context_year": 2019,
+    "sealed_final_test_year": 2024,
+    "sites": ["P1", "P2", "P3", "P4", "P15"],
+    "candidate_count_per_cycle": 8,
+    "dataset_sha256": "3470776d0fa29928b27e0099fc5a84d6fc9f8a84c1c778b1def6325f80fd2917",
+    "contract_sha256": "b523800533c28b7dc25e682c0e6dd842cd406c41b710b81db4e8ca6901b46880"
+  },
+  "source_robust_development": {
+    "protocol_id": "teacher-guided-robust-envelope-gam-development-v1",
+    "protocol_filename": "2026-08-06-teacher-guided-robust-envelope-gam-development-v1.json",
+    "protocol_sha256": "ab6e2072069e22973c38323e5545059b7e4b320ddf93a9e911cbf24f8b01d54a",
+    "expected_gate_passed": false,
+    "expected_status": "robust_envelope_gam_development_failed_stop_before_swap_or_2019",
+    "files": {
+      "gefs_robust_envelope_cycle_metrics_v1.csv": "ecd148d93192dbd57c5accdccd27ebd06c0a7ee1dfd7260e0c43a3cbafd50b90",
+      "gefs_robust_envelope_fold_metrics_v1.csv": "a3ac20e2fa4e836036b50f2e37bf592b9895adcfc37fc36954982f1c20bf738f",
+      "gefs_robust_envelope_site_metrics_v1.csv": "283d7fa9137cc8d4c8beab777518549d9919ab58fdb1008dffaafcff47ae6628",
+      "gefs_robust_envelope_model_audit_v1.csv": "c66c57af0d33fae57db684018d7408420fae93b80f9a147d8741145ccf90881b",
+      "gefs_robust_envelope_prediction_metrics_v1.csv": "557478894fbfdfd20da3c8b861ff6cc00a8faf98983c8ef16502377762886735",
+      "gefs_robust_envelope_development_gate_v1.json": "595fb1d85ed7be3b9317458a042ccf4000ed9b1427162f1fdee0f11f324bc2f1",
+      "gefs_robust_envelope_development_audit_v1.json": "585ae495561704ed4ce269903e9277ce1e2aa265b257075578bf0845e7ef621a",
+      "gefs_robust_envelope_development_manifest_v1.json": "a34e75fc1e952e1a8bd21450c791bbf69b351024317aaa8fd1b91e11a126e536"
+    },
+    "outer_model_count_per_fold": 5,
+    "reuse_preferred": true,
+    "same_frozen_rows_refit_allowed_when_reuse_fails": true
+  },
+  "validation": {
+    "rolling_year_folds": [
+      {"train_years": [2015], "validation_year": 2016},
+      {"train_years": [2015, 2016], "validation_year": 2017},
+      {"train_years": [2015, 2016, 2017], "validation_year": 2018}
+    ],
+    "strict_outer_fold_count": 15,
+    "validation_cycle_count": 196,
+    "site_cycle_counts": {"P1": 38, "P2": 38, "P3": 41, "P4": 39, "P15": 40},
+    "held_out_site_uses_shared_terms_only": true,
+    "inner_unit": ["site_id", "target_year"],
+    "inner_same_year_other_sites_allowed": true,
+    "inner_future_years_forbidden": true
+  },
+  "features": {
+    "columns": [
+      "raw_peak_mm",
+      "raw_peak_is_zero_boundary",
+      "raw_peak_is_sixty_boundary",
+      "raw_peak_gain_margin",
+      "raw_peak_curvature_abs",
+      "delete_one_peak_mean_mm",
+      "delete_one_peak_median_mm",
+      "delete_one_peak_std_mm",
+      "delete_one_peak_range_mm",
+      "delete_one_peak_min_mm",
+      "delete_one_peak_max_mm",
+      "raw_minus_delete_one_median_mm",
+      "delete_one_gain_at_raw_mean",
+      "delete_one_gain_at_raw_std",
+      "delete_one_positive_gain_ratio"
+    ],
+    "full_state_vector_as_calibrator_input": false,
+    "target_columns_allowed": false
+  },
+  "calibrator": {
+    "type": "weighted_ridge_with_unpenalized_intercept",
+    "target": "true_fixed_grid_peak_mm_minus_raw_gam_peak_mm",
+    "high_risk_quantile": 0.8,
+    "gamma_grid": [0.0, 2.0, 5.0],
+    "lambda_grid": [0.1, 1.0, 10.0],
+    "selection_order": [
+      "minimum_global_maximum_absolute_error",
+      "minimum_positive_oracle_mean_absolute_error",
+      "minimum_overall_mean_absolute_error",
+      "larger_lambda",
+      "smaller_gamma"
+    ],
+    "standardization_scope": "current_fit_training_subset_only"
+  },
+  "interval": {
+    "signed_residual_quantiles": [0.05, 0.95],
+    "empirical_quantile_method": "inverse_cdf_order_statistic",
+    "range_mm": [0.0, 60.0],
+    "final_recommendation": "clipped_interval_midpoint",
+    "deployment_resolution_mm": 0.000001,
+    "round_or_snap_to_fixed_grid": false
+  },
+  "continuous_optimization": {
+    "range_mm": [0.0, 60.0],
+    "deployment_resolution_mm": 0.000001,
+    "dense_diagnostic_step_mm": 0.25,
+    "dense_grid_used_for_recommendation": false,
+    "tie_break": "smaller_irrigation",
+    "curvature_step_mm": 0.01
+  },
+  "gate": {
+    "tolerance": 0.0,
+    "positive_irrigation_threshold_mm": 0.000001,
+    "minimum_nonworse_outer_folds": 10,
+    "minimum_interval_coverage": 0.9,
+    "all_conditions_required": true
+  },
+  "forbidden": {
+    "2019_rows_read": true,
+    "2019_features_read": true,
+    "2019_targets_read": true,
+    "2019_swap_results_read": true,
+    "2024_rows_read": true,
+    "swap_rerun": true,
+    "moe_training": true,
+    "tta": true,
+    "model_promotion": true,
+    "second_stage_implementation": true
+  },
+  "passing_action": "authorize_separate_2015_2018_paired_continuous_swap_protocol_design_only",
+  "failing_action": "freeze_peak_interval_calibration_as_negative_stop_before_swap_or_2019"
+}

@@ -63,6 +63,45 @@ class WeightedRidgeTests(unittest.TestCase):
         self.assertEqual(selection.ridge_lambda, 10.0)
         np.testing.assert_allclose(selection.cross_fitted_peak_mm, true_peak)
 
+    def test_high_risk_weighting_reduces_synthetic_worst_error(self) -> None:
+        features = np.linspace(-1.0, 1.0, 12)[:, None]
+        target = np.asarray(
+            [
+                -1.827207903967607,
+                -1.225554564613057,
+                -1.1075087346355792,
+                -1.5606695248930897,
+                -0.09277661211798655,
+                0.04136910436382399,
+                -0.08665843586196093,
+                0.836013597552722,
+                1.091377107183947,
+                1.4197935210550359,
+                1.650574757021535,
+                8.251746792300777,
+            ]
+        )
+        baseline_error = np.abs(target)
+        unweighted = fit_weighted_ridge(
+            features,
+            target,
+            baseline_error,
+            gamma=0.0,
+            ridge_lambda=1.0,
+            feature_names=("x",),
+        )
+        weighted = fit_weighted_ridge(
+            features,
+            target,
+            baseline_error,
+            gamma=5.0,
+            ridge_lambda=1.0,
+            feature_names=("x",),
+        )
+        unweighted_max = np.max(np.abs(unweighted.predict(features) - target))
+        weighted_max = np.max(np.abs(weighted.predict(features) - target))
+        self.assertLess(weighted_max, unweighted_max)
+
 
 class IntervalTests(unittest.TestCase):
     def test_signed_quantiles_use_frozen_inverse_cdf_order_statistics(self) -> None:
