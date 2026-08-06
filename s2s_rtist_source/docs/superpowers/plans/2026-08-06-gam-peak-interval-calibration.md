@@ -110,11 +110,10 @@ for held_out_site, held_out_year in inner_units:
 
 **文件：**
 
-- 新建：`docs/operations/2026-08-06-gefs-gam-peak-interval-calibration-development-server.md`
 - 修改：`scripts/script_catalog.csv`
 - 生成：`gefs_gam_peak_interval_calibration_development_code_20260806_v1.tar.gz`
 
-1. 文档提供完整绝对路径命令：解压、测试、语法/JSON 检查、`nohup` 启动、PID、`tail -f`、15 折进度、异常 grep、`--resume`、结果读取和关键结果打包。
+1. 服务器命令不写入项目文档，只在交付回复中一次性提供完整绝对路径命令：解压、测试、语法/JSON 检查、`nohup` 启动、PID、`tail -f`、15 折进度、异常 grep、`--resume`、结果读取和关键结果打包。
 2. 明确源输入为上一阶段**完整** robust-envelope 输出目录；第一阶段失败也保留并打包，不得启动 SWAP 或读取 2019。
 3. 更新脚本目录的 SHA256。
 4. 在干净临时目录解包，运行目标测试、相关 GAM 回归测试、`py_compile`、`json.tool` 和包路径安全检查。
