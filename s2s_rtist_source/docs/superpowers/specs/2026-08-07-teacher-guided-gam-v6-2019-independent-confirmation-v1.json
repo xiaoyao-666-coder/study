@@ -1,0 +1,121 @@
+{
+  "protocol_id": "teacher-guided-gam-v6-2019-independent-confirmation-v1",
+  "stage": "frozen_v6_2019_time_out_confirmation",
+  "evidence_claim": {
+    "independent_of_v6_rule_and_threshold_selection": true,
+    "pristine_final_generalization_test": false,
+    "earlier_2019_context_was_inspected": true,
+    "final_untouched_test_year": 2024
+  },
+  "upstream_v6": {
+    "required_status": "gam_v6_confidence_protected_anchor_replay_passed_pending_2019_independent_confirmation_design",
+    "required_execution_gate_passed": true,
+    "required_performance_gate_passed": true,
+    "required_protocol_sha256": "745b30bf20b5137a20298e3727eae7dcf957eff5fb6d6429983332e4c8a6338a"
+  },
+  "data_boundary": {
+    "fit_years": [2015, 2016, 2017, 2018],
+    "confirmation_year": 2019,
+    "sealed_test_year": 2024,
+    "sites": ["P1", "P2", "P3", "P4", "P15"],
+    "expected_confirmation_candidate_rows": 552,
+    "expected_confirmation_cycles": 69,
+    "expected_confirmation_site_cycles": {
+      "P1": 13,
+      "P2": 13,
+      "P3": 15,
+      "P4": 14,
+      "P15": 14
+    },
+    "candidate_count_per_cycle": 8,
+    "dataset_sha256": "3470776d0fa29928b27e0099fc5a84d6fc9f8a84c1c778b1def6325f80fd2917",
+    "dataset_contract_sha256": "b523800533c28b7dc25e682c0e6dd842cd406c41b710b81db4e8ca6901b46880",
+    "2019_target_read_before_recommendation_freeze": false,
+    "2024_access": false
+  },
+  "expert_refit": {
+    "family": "unchanged_hierarchical_gam_vc_bspline",
+    "target_site_excluded": true,
+    "source_site_count": 4,
+    "delete_one_expert_count": 4,
+    "fit_uses_all_frozen_development_years": true,
+    "penalty_source_fold_suffix": "rolling_to_2018",
+    "penalty_search": false,
+    "source_protocol_filename": "2026-08-05-teacher-guided-hierarchical-gam-nested-shared-selection-development-v2.json",
+    "source_protocol_sha256": "665d43c232107b50b4d14901faae398ebf71a0837ca852ad610c77ba7ce9d797",
+    "source_fold_metrics_filename": "gam_variant_fold_metrics_v1.csv",
+    "source_fold_metrics_sha256": "e1bde65852d62fadeef03c71a18a25bba462eb27dc4590d3ec4b727f2c0d390b",
+    "static_features_sha256": "5f06279577519c60967ffc207678d5e891d85fec3b04a631a8b38d12514e25c6"
+  },
+  "gate_model": {
+    "family": "positive_peak_protected_action_aware_group_balanced_ridge",
+    "environment_feature_count": 19,
+    "action_feature_count": 13,
+    "site_id_as_model_feature": false,
+    "l2_penalty": 1.0,
+    "positive_oracle_source_row_weight": 2.0,
+    "zero_oracle_source_row_weight": 1.0,
+    "absolute_residual_quantile": 0.9,
+    "support_score_quantile": 0.95,
+    "quantile_method": "higher",
+    "minimum_action_difference_mm": 1.0,
+    "hyperparameter_search": false,
+    "feature_search": false,
+    "threshold_search": false
+  },
+  "selection_rule": {
+    "v5_trust_region_radius_mm": 2.5,
+    "limited_candidate_required_lcb_mm": 5.0,
+    "unlimited_candidate_action": "use_v5_endpoint",
+    "limited_candidate_passing_action": "use_v5_endpoint",
+    "limited_candidate_failing_action": "use_anchor_endpoint",
+    "threshold_search": false,
+    "site_id_as_selection_feature": false,
+    "year_as_selection_feature": false,
+    "target_or_oracle_features": false,
+    "swap_gain_or_regret_features": false
+  },
+  "stage_1_recommendation_freeze": {
+    "expected_fold_count": 5,
+    "expected_cycle_count": 69,
+    "target_columns_loaded": [],
+    "passing_action": "authorize_hash_verified_2019_exact_paired_swap_confirmation_only",
+    "failing_action": "freeze_v6_2019_confirmation_before_target_read"
+  },
+  "swap": {
+    "range_mm": [0.0, 60.0],
+    "exact_match_tolerance_mm": 0.000001,
+    "fixed_irrigation_mm": [0.0, 10.0, 15.0, 20.0, 25.0, 30.0, 40.0, 60.0],
+    "fallback_offsets_mm": [0.1, 0.2, 0.3],
+    "restart_nprintday": 48,
+    "swap_dtmax_days": 0.001,
+    "formal_weather_sha256": "2d2c79c79329f45eac13895630de98463ae9c53b376ed4d5c498b022e61fe335",
+    "interpolation": false,
+    "unchanged_cycle_difference": 0.0
+  },
+  "performance_gate": {
+    "minimum_changed_cycles": 2,
+    "minimum_changed_sites": 2,
+    "minimum_nonworse_sites": 4,
+    "pooled_mean_swap_gain_nonworse": true,
+    "positive_oracle_mean_swap_gain_nonworse": true,
+    "zero_oracle_mean_swap_gain_nonworse": true,
+    "overall_fixed_eight_regret_nonworse": true,
+    "changed_cycle_maximum_adaptive_regret_nonworse": true,
+    "overall_mean_peak_distance_nonworse": true,
+    "positive_oracle_mean_peak_distance_nonworse": true,
+    "zero_oracle_mean_peak_distance_nonworse": true,
+    "global_maximum_peak_distance_nonworse": true,
+    "all_numeric_outputs_finite": true,
+    "tolerance": 0.000001
+  },
+  "outcomes": {
+    "passing_action": "authorize_2015_2019_final_refit_and_frozen_2024_test_protocol_design_only",
+    "failing_action": "freeze_v6_2019_confirmation_as_negative_or_inconclusive",
+    "automatic_model_promotion": false,
+    "final_refit_performed": false,
+    "2024_access": false,
+    "tta_performed": false
+  },
+  "status": "v6_2019_independent_confirmation_protocol_frozen_before_2019_target_read"
+}
