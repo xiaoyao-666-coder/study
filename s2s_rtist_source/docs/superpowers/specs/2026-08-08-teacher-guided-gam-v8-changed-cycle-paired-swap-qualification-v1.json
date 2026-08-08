@@ -1,0 +1,76 @@
+{
+  "candidate_reuse": {
+    "exact_irrigation_tolerance_mm": 1e-06,
+    "expected_reused_recommendation_count": 16,
+    "interpolation_allowed": false,
+    "maximum_new_exact_swap_runs": 8,
+    "nearest_neighbor_allowed": false
+  },
+  "changed_cycle_contract": {
+    "expected_changed_cycle_count": 12,
+    "expected_changed_site_count": 4,
+    "expected_full_cycle_count": 196,
+    "expected_plan_row_count": 24,
+    "expected_unchanged_cycle_count": 184,
+    "expected_changed_site_cycle_counts": {
+      "P1": 3,
+      "P2": 2,
+      "P3": 1,
+      "P4": 6
+    },
+    "expected_full_site_cycle_counts": {
+      "P1": 38,
+      "P2": 38,
+      "P3": 41,
+      "P4": 39,
+      "P15": 40
+    }
+  },
+  "evidence_boundary": {
+    "2019_access": false,
+    "2024_access": false,
+    "automatic_model_promotion": false,
+    "development_years": [
+      2015,
+      2016,
+      2017,
+      2018
+    ],
+    "recommendation_changes_after_plan_freeze": false,
+    "target_oracle_or_swap_outcome_selection": false
+  },
+  "performance_gate": {
+    "all_changed_pairs_finite": true,
+    "all_full_cycle_differences_finite": true,
+    "all_reused_and_new_execution_audits_passed": true,
+    "changed_cycle_maximum_adaptive_regret_nonworse": true,
+    "minimum_nonworse_outer_folds": 10,
+    "minimum_nonworse_target_sites": 4,
+    "overall_fixed_eight_regret_nonworse": true,
+    "pooled_mean_swap_gain_nonworse": true,
+    "positive_oracle_mean_swap_gain_nonworse": true,
+    "tolerance": 1e-06,
+    "zero_oracle_mean_swap_gain_nonworse": true
+  },
+  "protocol_id": "teacher-guided-gam-v8-changed-cycle-paired-swap-qualification-v1",
+  "source_stage_a": {
+    "required_gate_passed": true,
+    "required_status": "gam_v8_unlimited_preserving_confidence_shrinkage_replay_passed_pending_changed_cycle_exact_swap_design"
+  },
+  "source_v5_paired_swap": {
+    "required_execution_gate_passed": true,
+    "required_performance_gate_passed": false,
+    "required_status": "gam_v5_changed_cycle_paired_swap_qualification_failed_stop_before_2019"
+  },
+  "swap": {
+    "fallback_exhaustion_fails_stage": true,
+    "fallback_offsets_mm": [
+      0.1,
+      0.2,
+      0.3
+    ],
+    "max_fallback_adjustment_mm": 0.3,
+    "restart_nprintday": 48,
+    "swap_dtmax_days": 0.01
+  }
+}
