@@ -1,0 +1,81 @@
+{
+  "development_disclosure": {
+    "2019_covariates_reviewed_before_design": true,
+    "2019_swap_results_reviewed_before_design": false,
+    "2019_targets_reviewed_before_design": false,
+    "development_years_reused": [
+      2015,
+      2016,
+      2017,
+      2018
+    ],
+    "independent_confirmation": false,
+    "v5_swap_and_v7_results_reviewed_before_design": true
+  },
+  "evaluation_boundary": {
+    "2019_access": false,
+    "2024_access": false,
+    "automatic_model_promotion": false,
+    "cycle_count": 196,
+    "expert_reselection": false,
+    "gam_bspline_refit": false,
+    "gate_model_fit": false,
+    "outer_fold_count": 15,
+    "recommendation_optimization": false,
+    "swap_outcome_interpolation": false,
+    "swap_rerun": false,
+    "target_site_count": 5,
+    "target_validation_years": [
+      2016,
+      2017,
+      2018
+    ]
+  },
+  "performance_gate": {
+    "all_numeric_outputs_finite": true,
+    "global_maximum_peak_distance_nonworse": true,
+    "minimum_changed_irrigation_cycles": 10,
+    "minimum_changed_target_sites": 3,
+    "minimum_nonworse_outer_folds": 12,
+    "minimum_nonworse_target_sites": 4,
+    "overall_mean_peak_distance_nonworse": true,
+    "positive_oracle_mean_peak_distance_nonworse": true,
+    "tolerance": 1e-06,
+    "zero_oracle_mean_peak_distance_nonworse": true
+  },
+  "protocol_id": "teacher-guided-gam-v8-unlimited-preserving-confidence-shrinkage-replay-v1",
+  "selection_rule": {
+    "allowed_decision_features": [
+      "anchor_recommendation_mm",
+      "v5_recommendation_mm",
+      "selected_lcb_mm",
+      "trust_region_limited"
+    ],
+    "confidence_reference_lcb_mm": 5.0,
+    "family": "unlimited_preserving_limited_lcb_confidence_shrinkage",
+    "limited_movement_equation": "v5_movement_from_anchor_mm * clip(selected_lcb_mm / 5.0, 0.0, 1.0)",
+    "limited_scale_clip": [
+      0.0,
+      1.0
+    ],
+    "site_id_as_selection_feature": false,
+    "site_specific_thresholds": false,
+    "swap_gain_or_regret_features": false,
+    "target_or_oracle_features": false,
+    "threshold_search": false,
+    "unchanged_scale": 0.0,
+    "unlimited_scale": 1.0,
+    "year_as_selection_feature": false,
+    "year_specific_thresholds": false
+  },
+  "stage": "post_v7_unlimited_preserving_confidence_shrinkage_development_replay",
+  "upstream": {
+    "required_v5_gate_passed": true,
+    "required_v5_status": "gam_anchor_trust_region_mixture_replay_v5_passed_pending_changed_cycle_swap_design",
+    "required_v6_confidence_reference_lcb_mm": 5.0,
+    "required_v6_gate_passed": true,
+    "required_v6_status": "gam_v6_confidence_protected_anchor_replay_passed_pending_2019_independent_confirmation_design",
+    "required_v7_gate_passed": false,
+    "required_v7_status": "gam_v7_continuous_confidence_shrinkage_replay_failed_stop_before_swap_or_2019"
+  }
+}
