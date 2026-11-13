@@ -3,4 +3,5 @@
 *.py text eol=lf
 *.json text eol=lf
 swap_model_matched_feedback_20261113_v1/** -text
+swap_model_matched_feedback_20261113_v1/validation.json whitespace=cr-at-eol
 swap_model_matched_feedback_20261113_v1/soil_features.py -whitespace
