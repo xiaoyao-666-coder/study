@@ -1,0 +1,27 @@
+{
+  "passed": true,
+  "artificial_workers_only": true,
+  "real_model_calls": 0,
+  "numpy_metadata_stub": true,
+  "fixture_path": "/mnt/c/Users/LEGION/.codex/worktrees/water-context-atoms/study/s2s_rtist_source/docs/analysis/swap_water_context_atoms_20261113_v1/synthetic_lifecycle_v3od62dz",
+  "checks": [
+    "pass: stage barriers, exact archive and root-cause/timeout reporting",
+    "source_fail: stage barriers, exact archive and root-cause/timeout reporting",
+    "issue_fail: stage barriers, exact archive and root-cause/timeout reporting",
+    "history_fail: stage barriers, exact archive and root-cause/timeout reporting",
+    "score_fail: stage barriers, exact archive and root-cause/timeout reporting",
+    "bad_seal: stage barriers, exact archive and root-cause/timeout reporting",
+    "timeout: stage barriers, exact archive and root-cause/timeout reporting",
+    "total_timeout: stage barriers, exact archive and root-cause/timeout reporting",
+    "score_tamper: stage barriers, exact archive and root-cause/timeout reporting",
+    "lifetime lock, failed attempt preservation, duplicate-complete guard",
+    "launch failure returns exact archive"
+  ],
+  "tested_code": {
+    "runtime.py": "432a6a5718daad423477f9d792865fb1b817be45aef0fea83889b38b10087282",
+    "run.py": "7f82d5bb213050d1c1a398c4caa4176bfce75d3d5ed462bd2bf038ca00dece73",
+    "launch.py": "03a02c051e4fa1894f9b2508a0c72af04ff8b64877c8256b5950d7a162b9d682",
+    "access.py": "1e0f566648cd170ee512003a753368a4d85ebdb8e5ac44249f95a80a06ccd2f0",
+    "start.sh": "97af0c1ff5ed38292552e26657954e54c622e2945bea5499eecb5c3bab6210ec"
+  }
+}

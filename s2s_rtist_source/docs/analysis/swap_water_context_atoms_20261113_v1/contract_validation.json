@@ -1,0 +1,21 @@
+{
+  "checks": [
+    "Exact source/public/feedback/truth schemas and finite saved arrays",
+    "2014-2015 axes, same-model source exclusion, 10 physical windows and 80 mature feedback files",
+    "Frozen contract identity, 96 tasks, 21 masked dose pairs per behavior",
+    "Python 3.10 syntax and LF launcher; local production worker rejected before data access"
+  ],
+  "passed": true,
+  "real_local_model_calls": 0,
+  "tested_code": {
+    "CONTRACT.md": "b0c9bcb59ef4dff863141215ab6dd105ebcc8d8b60f0e098b45cd4974804319f",
+    "access.py": "1e0f566648cd170ee512003a753368a4d85ebdb8e5ac44249f95a80a06ccd2f0",
+    "launch.py": "03a02c051e4fa1894f9b2508a0c72af04ff8b64877c8256b5950d7a162b9d682",
+    "run.py": "7f82d5bb213050d1c1a398c4caa4176bfce75d3d5ed462bd2bf038ca00dece73",
+    "runtime.py": "432a6a5718daad423477f9d792865fb1b817be45aef0fea83889b38b10087282",
+    "scoring.py": "74a3983dcf8ba4187c0512e1a5b2101bb7260541fe2b0eff87e614fcc342efda",
+    "start.sh": "97af0c1ff5ed38292552e26657954e54c622e2945bea5499eecb5c3bab6210ec",
+    "transfer.py": "8b0a63a906fed2471f294172a08ceb6a6840f77e2dcf0b3360664b15c8563a22",
+    "worker.py": "ac958bba0d2287d2d575a274d366dbbbf25c97ca885b411b77efce19d202233a"
+  }
+}

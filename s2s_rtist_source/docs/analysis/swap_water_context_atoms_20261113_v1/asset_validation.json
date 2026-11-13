@@ -1,0 +1,25 @@
+{
+  "context_features": [
+    "cwdm",
+    "cwso",
+    "dvs",
+    "lai",
+    "root_cm",
+    "rain_sum",
+    "rad_mean",
+    "tmax_mean",
+    "tmin_mean",
+    "vapor_mean",
+    "wind_mean"
+  ],
+  "dose_invariant_contexts": 10,
+  "exact_R1_B0_D1_bindings": true,
+  "feedback_files": 80,
+  "passed": true,
+  "protected_files": 710,
+  "public_pairs": 10,
+  "real_local_model_calls": 0,
+  "source_files": 5,
+  "source_pairs_per_file": 8,
+  "truth_files": 10
+}

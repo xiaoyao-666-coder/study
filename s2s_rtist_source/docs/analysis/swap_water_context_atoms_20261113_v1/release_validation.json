@@ -1,0 +1,12 @@
+{
+  "LF_shell": true,
+  "archive_sha256": "6ea0036d1d723e891b4be57a7bfb7e7f155f2eff663052695a0958152e91d94c",
+  "ascii_member_paths": true,
+  "clean_extraction_byte_identity": true,
+  "manifest_sha256": "15c7b254b9c648c90329c541c87169a096b9c2bde0f7e1b850e831c618d92d57",
+  "members": 117,
+  "passed": true,
+  "production_static_verifier": true,
+  "python310_syntax": true,
+  "real_local_model_calls": 0
+}

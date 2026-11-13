@@ -1,0 +1,16 @@
+{
+  "archive_bytes": 319597,
+  "archive_path": "D:\\study\\s2s_rtist_source\\swap_water_context_atoms_20261113_v1.zip",
+  "archive_sha256": "6ea0036d1d723e891b4be57a7bfb7e7f155f2eff663052695a0958152e91d94c",
+  "manifest_sha256": "15c7b254b9c648c90329c541c87169a096b9c2bde0f7e1b850e831c618d92d57",
+  "members": 117,
+  "name": "swap_water_context_atoms_20261113_v1",
+  "protected_files_unchanged": 710,
+  "real_local_model_calls": 0,
+  "validation": {
+    "asset_validation.json": "ac4860c95a15c20b63d75fa44f87b6629388e9f3e264b8caa7e7636cc86dbd2c",
+    "contract_validation.json": "aaa47ff511f923cf36dd3f76f71ab92974526c2d35a22d6a99c3bed7cb50f1ba",
+    "runtime_validation.json": "350abbb29a0da4d58a6fde565b459e0141134bc707cb85e96cdf9e3941e4d7ce",
+    "synthetic_validation.json": "8fc8a571b01dcb090a6a5356c52c51553f0eacbe1f1ac87639f167f5c13b1ea9"
+  }
+}

@@ -1,0 +1,13 @@
+# Reproducible saved numerical payload stays in the local delivery ZIP.
+swap_water_context_atoms_20261113_v1/source/
+swap_water_context_atoms_20261113_v1/public/
+swap_water_context_atoms_20261113_v1/feedback/
+swap_water_context_atoms_20261113_v1/truth/
+swap_water_context_atoms_20261113_v1/protocol.json
+swap_water_context_atoms_20261113_v1/provenance.json
+swap_water_context_atoms_20261113_v1/manifest.json
+protected_inputs.json
+synthetic_*/
+release_check_*/
+__pycache__/
+*.pyc

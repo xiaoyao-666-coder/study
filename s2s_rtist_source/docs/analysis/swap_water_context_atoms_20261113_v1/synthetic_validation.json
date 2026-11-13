@@ -1,0 +1,24 @@
+{
+  "artificial_only": true,
+  "checks": [
+    "Independent complete replay: 5 source sets, 10 physical windows, 80 versions, 1680 masked pairs",
+    "Scalar 21-pair score; b=0 exclusion; physical/site-balanced macro and drop-largest; sign zero band",
+    "All-constant contexts give uniform prior; equal feedback likelihood leaves off unchanged",
+    "Known residual directs posterior; log-domain underflow keeps global and conditional predictions finite",
+    "Reject illegal feedback, source leak, mismatched model, tampered residuals, target bases, weights and predictions",
+    "96 production worker subprocesses, artificial inputs only; exact read ledgers, stage seals and scorer equality",
+    "Audit hook blocks target truth, other action feedback and other source reads"
+  ],
+  "fixture_path": "C:\\Users\\LEGION\\.codex\\worktrees\\water-context-atoms\\study\\s2s_rtist_source\\docs\\analysis\\swap_water_context_atoms_20261113_v1\\synthetic_kzzw63gg",
+  "passed": true,
+  "real_model_calls": 0,
+  "tested_code": {
+    "access.py": "1e0f566648cd170ee512003a753368a4d85ebdb8e5ac44249f95a80a06ccd2f0",
+    "launch.py": "03a02c051e4fa1894f9b2508a0c72af04ff8b64877c8256b5950d7a162b9d682",
+    "run.py": "7f82d5bb213050d1c1a398c4caa4176bfce75d3d5ed462bd2bf038ca00dece73",
+    "runtime.py": "432a6a5718daad423477f9d792865fb1b817be45aef0fea83889b38b10087282",
+    "scoring.py": "74a3983dcf8ba4187c0512e1a5b2101bb7260541fe2b0eff87e614fcc342efda",
+    "transfer.py": "8b0a63a906fed2471f294172a08ceb6a6840f77e2dcf0b3360664b15c8563a22",
+    "worker.py": "ac958bba0d2287d2d575a274d366dbbbf25c97ca885b411b77efce19d202233a"
+  }
+}
