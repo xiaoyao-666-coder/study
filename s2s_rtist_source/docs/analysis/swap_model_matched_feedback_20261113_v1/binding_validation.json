@@ -1,0 +1,14 @@
+{
+  "passed": true,
+  "models": 30,
+  "directions": 60,
+  "versions": 768,
+  "physical_cycles": 64,
+  "mature_physical_cycles": 59,
+  "unified_head_bound": true,
+  "all_clocks_checked": true,
+  "feedback_capsules_exact": true,
+  "immutable_expert_parameters": true,
+  "source_files_unchanged": true,
+  "local_real_forward_calls": 0
+}
