@@ -1,0 +1,10 @@
+{
+  "passed": true,
+  "sites": 5,
+  "directions": 60,
+  "authenticated_2016_input_and_rootstate_files": 10,
+  "saved_target_keys_match": true,
+  "rootstate_clock_and_keys_match": true,
+  "local_real_compute_calls": 0,
+  "test_sha256": "1c4b94baa408d73dfec2a0236fa5908adc936db2217a1e76e248f13a90ecdc7d"
+}

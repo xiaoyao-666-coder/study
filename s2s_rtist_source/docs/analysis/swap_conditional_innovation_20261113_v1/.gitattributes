@@ -1,0 +1,2 @@
+# Preserve authenticated payloads and validation hashes on every checkout.
+* -text

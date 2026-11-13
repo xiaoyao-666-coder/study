@@ -1,0 +1,1121 @@
+{
+  "name": "swap_conditional_innovation_20261113_v1",
+  "tasks": [
+    {
+      "id": "P15_P2_P3_through_2015__GV__s1729__donor_P4__target_P1",
+      "base_id": "P15_P2_P3_through_2015__GV__s1729",
+      "source_sites": [
+        "P15",
+        "P2",
+        "P3"
+      ],
+      "donor": "P4",
+      "target": "P1",
+      "seed": 1729
+    },
+    {
+      "id": "P15_P2_P3_through_2015__GV__s1729__donor_P1__target_P4",
+      "base_id": "P15_P2_P3_through_2015__GV__s1729",
+      "source_sites": [
+        "P15",
+        "P2",
+        "P3"
+      ],
+      "donor": "P1",
+      "target": "P4",
+      "seed": 1729
+    },
+    {
+      "id": "P15_P2_P3_through_2015__GV__s1730__donor_P4__target_P1",
+      "base_id": "P15_P2_P3_through_2015__GV__s1730",
+      "source_sites": [
+        "P15",
+        "P2",
+        "P3"
+      ],
+      "donor": "P4",
+      "target": "P1",
+      "seed": 1730
+    },
+    {
+      "id": "P15_P2_P3_through_2015__GV__s1730__donor_P1__target_P4",
+      "base_id": "P15_P2_P3_through_2015__GV__s1730",
+      "source_sites": [
+        "P15",
+        "P2",
+        "P3"
+      ],
+      "donor": "P1",
+      "target": "P4",
+      "seed": 1730
+    },
+    {
+      "id": "P15_P2_P3_through_2015__GV__s1731__donor_P4__target_P1",
+      "base_id": "P15_P2_P3_through_2015__GV__s1731",
+      "source_sites": [
+        "P15",
+        "P2",
+        "P3"
+      ],
+      "donor": "P4",
+      "target": "P1",
+      "seed": 1731
+    },
+    {
+      "id": "P15_P2_P3_through_2015__GV__s1731__donor_P1__target_P4",
+      "base_id": "P15_P2_P3_through_2015__GV__s1731",
+      "source_sites": [
+        "P15",
+        "P2",
+        "P3"
+      ],
+      "donor": "P1",
+      "target": "P4",
+      "seed": 1731
+    },
+    {
+      "id": "P15_P2_P4_through_2015__GV__s1729__donor_P3__target_P1",
+      "base_id": "P15_P2_P4_through_2015__GV__s1729",
+      "source_sites": [
+        "P15",
+        "P2",
+        "P4"
+      ],
+      "donor": "P3",
+      "target": "P1",
+      "seed": 1729
+    },
+    {
+      "id": "P15_P2_P4_through_2015__GV__s1729__donor_P1__target_P3",
+      "base_id": "P15_P2_P4_through_2015__GV__s1729",
+      "source_sites": [
+        "P15",
+        "P2",
+        "P4"
+      ],
+      "donor": "P1",
+      "target": "P3",
+      "seed": 1729
+    },
+    {
+      "id": "P15_P2_P4_through_2015__GV__s1730__donor_P3__target_P1",
+      "base_id": "P15_P2_P4_through_2015__GV__s1730",
+      "source_sites": [
+        "P15",
+        "P2",
+        "P4"
+      ],
+      "donor": "P3",
+      "target": "P1",
+      "seed": 1730
+    },
+    {
+      "id": "P15_P2_P4_through_2015__GV__s1730__donor_P1__target_P3",
+      "base_id": "P15_P2_P4_through_2015__GV__s1730",
+      "source_sites": [
+        "P15",
+        "P2",
+        "P4"
+      ],
+      "donor": "P1",
+      "target": "P3",
+      "seed": 1730
+    },
+    {
+      "id": "P15_P2_P4_through_2015__GV__s1731__donor_P3__target_P1",
+      "base_id": "P15_P2_P4_through_2015__GV__s1731",
+      "source_sites": [
+        "P15",
+        "P2",
+        "P4"
+      ],
+      "donor": "P3",
+      "target": "P1",
+      "seed": 1731
+    },
+    {
+      "id": "P15_P2_P4_through_2015__GV__s1731__donor_P1__target_P3",
+      "base_id": "P15_P2_P4_through_2015__GV__s1731",
+      "source_sites": [
+        "P15",
+        "P2",
+        "P4"
+      ],
+      "donor": "P1",
+      "target": "P3",
+      "seed": 1731
+    },
+    {
+      "id": "P15_P3_P4_through_2015__GV__s1729__donor_P2__target_P1",
+      "base_id": "P15_P3_P4_through_2015__GV__s1729",
+      "source_sites": [
+        "P15",
+        "P3",
+        "P4"
+      ],
+      "donor": "P2",
+      "target": "P1",
+      "seed": 1729
+    },
+    {
+      "id": "P15_P3_P4_through_2015__GV__s1729__donor_P1__target_P2",
+      "base_id": "P15_P3_P4_through_2015__GV__s1729",
+      "source_sites": [
+        "P15",
+        "P3",
+        "P4"
+      ],
+      "donor": "P1",
+      "target": "P2",
+      "seed": 1729
+    },
+    {
+      "id": "P15_P3_P4_through_2015__GV__s1730__donor_P2__target_P1",
+      "base_id": "P15_P3_P4_through_2015__GV__s1730",
+      "source_sites": [
+        "P15",
+        "P3",
+        "P4"
+      ],
+      "donor": "P2",
+      "target": "P1",
+      "seed": 1730
+    },
+    {
+      "id": "P15_P3_P4_through_2015__GV__s1730__donor_P1__target_P2",
+      "base_id": "P15_P3_P4_through_2015__GV__s1730",
+      "source_sites": [
+        "P15",
+        "P3",
+        "P4"
+      ],
+      "donor": "P1",
+      "target": "P2",
+      "seed": 1730
+    },
+    {
+      "id": "P15_P3_P4_through_2015__GV__s1731__donor_P2__target_P1",
+      "base_id": "P15_P3_P4_through_2015__GV__s1731",
+      "source_sites": [
+        "P15",
+        "P3",
+        "P4"
+      ],
+      "donor": "P2",
+      "target": "P1",
+      "seed": 1731
+    },
+    {
+      "id": "P15_P3_P4_through_2015__GV__s1731__donor_P1__target_P2",
+      "base_id": "P15_P3_P4_through_2015__GV__s1731",
+      "source_sites": [
+        "P15",
+        "P3",
+        "P4"
+      ],
+      "donor": "P1",
+      "target": "P2",
+      "seed": 1731
+    },
+    {
+      "id": "P1_P15_P2_through_2015__GV__s1729__donor_P4__target_P3",
+      "base_id": "P1_P15_P2_through_2015__GV__s1729",
+      "source_sites": [
+        "P1",
+        "P15",
+        "P2"
+      ],
+      "donor": "P4",
+      "target": "P3",
+      "seed": 1729
+    },
+    {
+      "id": "P1_P15_P2_through_2015__GV__s1729__donor_P3__target_P4",
+      "base_id": "P1_P15_P2_through_2015__GV__s1729",
+      "source_sites": [
+        "P1",
+        "P15",
+        "P2"
+      ],
+      "donor": "P3",
+      "target": "P4",
+      "seed": 1729
+    },
+    {
+      "id": "P1_P15_P2_through_2015__GV__s1730__donor_P4__target_P3",
+      "base_id": "P1_P15_P2_through_2015__GV__s1730",
+      "source_sites": [
+        "P1",
+        "P15",
+        "P2"
+      ],
+      "donor": "P4",
+      "target": "P3",
+      "seed": 1730
+    },
+    {
+      "id": "P1_P15_P2_through_2015__GV__s1730__donor_P3__target_P4",
+      "base_id": "P1_P15_P2_through_2015__GV__s1730",
+      "source_sites": [
+        "P1",
+        "P15",
+        "P2"
+      ],
+      "donor": "P3",
+      "target": "P4",
+      "seed": 1730
+    },
+    {
+      "id": "P1_P15_P2_through_2015__GV__s1731__donor_P4__target_P3",
+      "base_id": "P1_P15_P2_through_2015__GV__s1731",
+      "source_sites": [
+        "P1",
+        "P15",
+        "P2"
+      ],
+      "donor": "P4",
+      "target": "P3",
+      "seed": 1731
+    },
+    {
+      "id": "P1_P15_P2_through_2015__GV__s1731__donor_P3__target_P4",
+      "base_id": "P1_P15_P2_through_2015__GV__s1731",
+      "source_sites": [
+        "P1",
+        "P15",
+        "P2"
+      ],
+      "donor": "P3",
+      "target": "P4",
+      "seed": 1731
+    },
+    {
+      "id": "P1_P15_P3_through_2015__GV__s1729__donor_P4__target_P2",
+      "base_id": "P1_P15_P3_through_2015__GV__s1729",
+      "source_sites": [
+        "P1",
+        "P15",
+        "P3"
+      ],
+      "donor": "P4",
+      "target": "P2",
+      "seed": 1729
+    },
+    {
+      "id": "P1_P15_P3_through_2015__GV__s1729__donor_P2__target_P4",
+      "base_id": "P1_P15_P3_through_2015__GV__s1729",
+      "source_sites": [
+        "P1",
+        "P15",
+        "P3"
+      ],
+      "donor": "P2",
+      "target": "P4",
+      "seed": 1729
+    },
+    {
+      "id": "P1_P15_P3_through_2015__GV__s1730__donor_P4__target_P2",
+      "base_id": "P1_P15_P3_through_2015__GV__s1730",
+      "source_sites": [
+        "P1",
+        "P15",
+        "P3"
+      ],
+      "donor": "P4",
+      "target": "P2",
+      "seed": 1730
+    },
+    {
+      "id": "P1_P15_P3_through_2015__GV__s1730__donor_P2__target_P4",
+      "base_id": "P1_P15_P3_through_2015__GV__s1730",
+      "source_sites": [
+        "P1",
+        "P15",
+        "P3"
+      ],
+      "donor": "P2",
+      "target": "P4",
+      "seed": 1730
+    },
+    {
+      "id": "P1_P15_P3_through_2015__GV__s1731__donor_P4__target_P2",
+      "base_id": "P1_P15_P3_through_2015__GV__s1731",
+      "source_sites": [
+        "P1",
+        "P15",
+        "P3"
+      ],
+      "donor": "P4",
+      "target": "P2",
+      "seed": 1731
+    },
+    {
+      "id": "P1_P15_P3_through_2015__GV__s1731__donor_P2__target_P4",
+      "base_id": "P1_P15_P3_through_2015__GV__s1731",
+      "source_sites": [
+        "P1",
+        "P15",
+        "P3"
+      ],
+      "donor": "P2",
+      "target": "P4",
+      "seed": 1731
+    },
+    {
+      "id": "P1_P15_P4_through_2015__GV__s1729__donor_P3__target_P2",
+      "base_id": "P1_P15_P4_through_2015__GV__s1729",
+      "source_sites": [
+        "P1",
+        "P15",
+        "P4"
+      ],
+      "donor": "P3",
+      "target": "P2",
+      "seed": 1729
+    },
+    {
+      "id": "P1_P15_P4_through_2015__GV__s1729__donor_P2__target_P3",
+      "base_id": "P1_P15_P4_through_2015__GV__s1729",
+      "source_sites": [
+        "P1",
+        "P15",
+        "P4"
+      ],
+      "donor": "P2",
+      "target": "P3",
+      "seed": 1729
+    },
+    {
+      "id": "P1_P15_P4_through_2015__GV__s1730__donor_P3__target_P2",
+      "base_id": "P1_P15_P4_through_2015__GV__s1730",
+      "source_sites": [
+        "P1",
+        "P15",
+        "P4"
+      ],
+      "donor": "P3",
+      "target": "P2",
+      "seed": 1730
+    },
+    {
+      "id": "P1_P15_P4_through_2015__GV__s1730__donor_P2__target_P3",
+      "base_id": "P1_P15_P4_through_2015__GV__s1730",
+      "source_sites": [
+        "P1",
+        "P15",
+        "P4"
+      ],
+      "donor": "P2",
+      "target": "P3",
+      "seed": 1730
+    },
+    {
+      "id": "P1_P15_P4_through_2015__GV__s1731__donor_P3__target_P2",
+      "base_id": "P1_P15_P4_through_2015__GV__s1731",
+      "source_sites": [
+        "P1",
+        "P15",
+        "P4"
+      ],
+      "donor": "P3",
+      "target": "P2",
+      "seed": 1731
+    },
+    {
+      "id": "P1_P15_P4_through_2015__GV__s1731__donor_P2__target_P3",
+      "base_id": "P1_P15_P4_through_2015__GV__s1731",
+      "source_sites": [
+        "P1",
+        "P15",
+        "P4"
+      ],
+      "donor": "P2",
+      "target": "P3",
+      "seed": 1731
+    },
+    {
+      "id": "P1_P2_P3_through_2015__GV__s1729__donor_P4__target_P15",
+      "base_id": "P1_P2_P3_through_2015__GV__s1729",
+      "source_sites": [
+        "P1",
+        "P2",
+        "P3"
+      ],
+      "donor": "P4",
+      "target": "P15",
+      "seed": 1729
+    },
+    {
+      "id": "P1_P2_P3_through_2015__GV__s1729__donor_P15__target_P4",
+      "base_id": "P1_P2_P3_through_2015__GV__s1729",
+      "source_sites": [
+        "P1",
+        "P2",
+        "P3"
+      ],
+      "donor": "P15",
+      "target": "P4",
+      "seed": 1729
+    },
+    {
+      "id": "P1_P2_P3_through_2015__GV__s1730__donor_P4__target_P15",
+      "base_id": "P1_P2_P3_through_2015__GV__s1730",
+      "source_sites": [
+        "P1",
+        "P2",
+        "P3"
+      ],
+      "donor": "P4",
+      "target": "P15",
+      "seed": 1730
+    },
+    {
+      "id": "P1_P2_P3_through_2015__GV__s1730__donor_P15__target_P4",
+      "base_id": "P1_P2_P3_through_2015__GV__s1730",
+      "source_sites": [
+        "P1",
+        "P2",
+        "P3"
+      ],
+      "donor": "P15",
+      "target": "P4",
+      "seed": 1730
+    },
+    {
+      "id": "P1_P2_P3_through_2015__GV__s1731__donor_P4__target_P15",
+      "base_id": "P1_P2_P3_through_2015__GV__s1731",
+      "source_sites": [
+        "P1",
+        "P2",
+        "P3"
+      ],
+      "donor": "P4",
+      "target": "P15",
+      "seed": 1731
+    },
+    {
+      "id": "P1_P2_P3_through_2015__GV__s1731__donor_P15__target_P4",
+      "base_id": "P1_P2_P3_through_2015__GV__s1731",
+      "source_sites": [
+        "P1",
+        "P2",
+        "P3"
+      ],
+      "donor": "P15",
+      "target": "P4",
+      "seed": 1731
+    },
+    {
+      "id": "P1_P2_P4_through_2015__GV__s1729__donor_P3__target_P15",
+      "base_id": "P1_P2_P4_through_2015__GV__s1729",
+      "source_sites": [
+        "P1",
+        "P2",
+        "P4"
+      ],
+      "donor": "P3",
+      "target": "P15",
+      "seed": 1729
+    },
+    {
+      "id": "P1_P2_P4_through_2015__GV__s1729__donor_P15__target_P3",
+      "base_id": "P1_P2_P4_through_2015__GV__s1729",
+      "source_sites": [
+        "P1",
+        "P2",
+        "P4"
+      ],
+      "donor": "P15",
+      "target": "P3",
+      "seed": 1729
+    },
+    {
+      "id": "P1_P2_P4_through_2015__GV__s1730__donor_P3__target_P15",
+      "base_id": "P1_P2_P4_through_2015__GV__s1730",
+      "source_sites": [
+        "P1",
+        "P2",
+        "P4"
+      ],
+      "donor": "P3",
+      "target": "P15",
+      "seed": 1730
+    },
+    {
+      "id": "P1_P2_P4_through_2015__GV__s1730__donor_P15__target_P3",
+      "base_id": "P1_P2_P4_through_2015__GV__s1730",
+      "source_sites": [
+        "P1",
+        "P2",
+        "P4"
+      ],
+      "donor": "P15",
+      "target": "P3",
+      "seed": 1730
+    },
+    {
+      "id": "P1_P2_P4_through_2015__GV__s1731__donor_P3__target_P15",
+      "base_id": "P1_P2_P4_through_2015__GV__s1731",
+      "source_sites": [
+        "P1",
+        "P2",
+        "P4"
+      ],
+      "donor": "P3",
+      "target": "P15",
+      "seed": 1731
+    },
+    {
+      "id": "P1_P2_P4_through_2015__GV__s1731__donor_P15__target_P3",
+      "base_id": "P1_P2_P4_through_2015__GV__s1731",
+      "source_sites": [
+        "P1",
+        "P2",
+        "P4"
+      ],
+      "donor": "P15",
+      "target": "P3",
+      "seed": 1731
+    },
+    {
+      "id": "P1_P3_P4_through_2015__GV__s1729__donor_P2__target_P15",
+      "base_id": "P1_P3_P4_through_2015__GV__s1729",
+      "source_sites": [
+        "P1",
+        "P3",
+        "P4"
+      ],
+      "donor": "P2",
+      "target": "P15",
+      "seed": 1729
+    },
+    {
+      "id": "P1_P3_P4_through_2015__GV__s1729__donor_P15__target_P2",
+      "base_id": "P1_P3_P4_through_2015__GV__s1729",
+      "source_sites": [
+        "P1",
+        "P3",
+        "P4"
+      ],
+      "donor": "P15",
+      "target": "P2",
+      "seed": 1729
+    },
+    {
+      "id": "P1_P3_P4_through_2015__GV__s1730__donor_P2__target_P15",
+      "base_id": "P1_P3_P4_through_2015__GV__s1730",
+      "source_sites": [
+        "P1",
+        "P3",
+        "P4"
+      ],
+      "donor": "P2",
+      "target": "P15",
+      "seed": 1730
+    },
+    {
+      "id": "P1_P3_P4_through_2015__GV__s1730__donor_P15__target_P2",
+      "base_id": "P1_P3_P4_through_2015__GV__s1730",
+      "source_sites": [
+        "P1",
+        "P3",
+        "P4"
+      ],
+      "donor": "P15",
+      "target": "P2",
+      "seed": 1730
+    },
+    {
+      "id": "P1_P3_P4_through_2015__GV__s1731__donor_P2__target_P15",
+      "base_id": "P1_P3_P4_through_2015__GV__s1731",
+      "source_sites": [
+        "P1",
+        "P3",
+        "P4"
+      ],
+      "donor": "P2",
+      "target": "P15",
+      "seed": 1731
+    },
+    {
+      "id": "P1_P3_P4_through_2015__GV__s1731__donor_P15__target_P2",
+      "base_id": "P1_P3_P4_through_2015__GV__s1731",
+      "source_sites": [
+        "P1",
+        "P3",
+        "P4"
+      ],
+      "donor": "P15",
+      "target": "P2",
+      "seed": 1731
+    },
+    {
+      "id": "P2_P3_P4_through_2015__GV__s1729__donor_P15__target_P1",
+      "base_id": "P2_P3_P4_through_2015__GV__s1729",
+      "source_sites": [
+        "P2",
+        "P3",
+        "P4"
+      ],
+      "donor": "P15",
+      "target": "P1",
+      "seed": 1729
+    },
+    {
+      "id": "P2_P3_P4_through_2015__GV__s1729__donor_P1__target_P15",
+      "base_id": "P2_P3_P4_through_2015__GV__s1729",
+      "source_sites": [
+        "P2",
+        "P3",
+        "P4"
+      ],
+      "donor": "P1",
+      "target": "P15",
+      "seed": 1729
+    },
+    {
+      "id": "P2_P3_P4_through_2015__GV__s1730__donor_P15__target_P1",
+      "base_id": "P2_P3_P4_through_2015__GV__s1730",
+      "source_sites": [
+        "P2",
+        "P3",
+        "P4"
+      ],
+      "donor": "P15",
+      "target": "P1",
+      "seed": 1730
+    },
+    {
+      "id": "P2_P3_P4_through_2015__GV__s1730__donor_P1__target_P15",
+      "base_id": "P2_P3_P4_through_2015__GV__s1730",
+      "source_sites": [
+        "P2",
+        "P3",
+        "P4"
+      ],
+      "donor": "P1",
+      "target": "P15",
+      "seed": 1730
+    },
+    {
+      "id": "P2_P3_P4_through_2015__GV__s1731__donor_P15__target_P1",
+      "base_id": "P2_P3_P4_through_2015__GV__s1731",
+      "source_sites": [
+        "P2",
+        "P3",
+        "P4"
+      ],
+      "donor": "P15",
+      "target": "P1",
+      "seed": 1731
+    },
+    {
+      "id": "P2_P3_P4_through_2015__GV__s1731__donor_P1__target_P15",
+      "base_id": "P2_P3_P4_through_2015__GV__s1731",
+      "source_sites": [
+        "P2",
+        "P3",
+        "P4"
+      ],
+      "donor": "P1",
+      "target": "P15",
+      "seed": 1731
+    }
+  ],
+  "worker_timeout_seconds": 1800,
+  "total_timeout_seconds": 10800,
+  "years": [
+    2014,
+    2015,
+    2016
+  ],
+  "roles": [
+    "source",
+    "predict",
+    "score"
+  ],
+  "methods": [
+    "raw",
+    "static",
+    "on",
+    "reverse",
+    "uncentered"
+  ],
+  "source_years": [
+    2014,
+    2015
+  ],
+  "evaluation_year": 2016,
+  "primary": "on-static",
+  "radius": 0.125,
+  "ridge": 0.01,
+  "tau": 0.05,
+  "automatic_promotion": false,
+  "counts": [
+    {
+      "task": "P15_P2_P3_through_2015__GV__s1729__donor_P4__target_P1",
+      "target": "P1",
+      "total": 12,
+      "mature": 11
+    },
+    {
+      "task": "P15_P2_P3_through_2015__GV__s1729__donor_P1__target_P4",
+      "target": "P4",
+      "total": 13,
+      "mature": 12
+    },
+    {
+      "task": "P15_P2_P3_through_2015__GV__s1730__donor_P4__target_P1",
+      "target": "P1",
+      "total": 12,
+      "mature": 11
+    },
+    {
+      "task": "P15_P2_P3_through_2015__GV__s1730__donor_P1__target_P4",
+      "target": "P4",
+      "total": 13,
+      "mature": 12
+    },
+    {
+      "task": "P15_P2_P3_through_2015__GV__s1731__donor_P4__target_P1",
+      "target": "P1",
+      "total": 12,
+      "mature": 11
+    },
+    {
+      "task": "P15_P2_P3_through_2015__GV__s1731__donor_P1__target_P4",
+      "target": "P4",
+      "total": 13,
+      "mature": 12
+    },
+    {
+      "task": "P15_P2_P4_through_2015__GV__s1729__donor_P3__target_P1",
+      "target": "P1",
+      "total": 12,
+      "mature": 11
+    },
+    {
+      "task": "P15_P2_P4_through_2015__GV__s1729__donor_P1__target_P3",
+      "target": "P3",
+      "total": 13,
+      "mature": 12
+    },
+    {
+      "task": "P15_P2_P4_through_2015__GV__s1730__donor_P3__target_P1",
+      "target": "P1",
+      "total": 12,
+      "mature": 11
+    },
+    {
+      "task": "P15_P2_P4_through_2015__GV__s1730__donor_P1__target_P3",
+      "target": "P3",
+      "total": 13,
+      "mature": 12
+    },
+    {
+      "task": "P15_P2_P4_through_2015__GV__s1731__donor_P3__target_P1",
+      "target": "P1",
+      "total": 12,
+      "mature": 11
+    },
+    {
+      "task": "P15_P2_P4_through_2015__GV__s1731__donor_P1__target_P3",
+      "target": "P3",
+      "total": 13,
+      "mature": 12
+    },
+    {
+      "task": "P15_P3_P4_through_2015__GV__s1729__donor_P2__target_P1",
+      "target": "P1",
+      "total": 12,
+      "mature": 11
+    },
+    {
+      "task": "P15_P3_P4_through_2015__GV__s1729__donor_P1__target_P2",
+      "target": "P2",
+      "total": 13,
+      "mature": 12
+    },
+    {
+      "task": "P15_P3_P4_through_2015__GV__s1730__donor_P2__target_P1",
+      "target": "P1",
+      "total": 12,
+      "mature": 11
+    },
+    {
+      "task": "P15_P3_P4_through_2015__GV__s1730__donor_P1__target_P2",
+      "target": "P2",
+      "total": 13,
+      "mature": 12
+    },
+    {
+      "task": "P15_P3_P4_through_2015__GV__s1731__donor_P2__target_P1",
+      "target": "P1",
+      "total": 12,
+      "mature": 11
+    },
+    {
+      "task": "P15_P3_P4_through_2015__GV__s1731__donor_P1__target_P2",
+      "target": "P2",
+      "total": 13,
+      "mature": 12
+    },
+    {
+      "task": "P1_P15_P2_through_2015__GV__s1729__donor_P4__target_P3",
+      "target": "P3",
+      "total": 13,
+      "mature": 12
+    },
+    {
+      "task": "P1_P15_P2_through_2015__GV__s1729__donor_P3__target_P4",
+      "target": "P4",
+      "total": 13,
+      "mature": 12
+    },
+    {
+      "task": "P1_P15_P2_through_2015__GV__s1730__donor_P4__target_P3",
+      "target": "P3",
+      "total": 13,
+      "mature": 12
+    },
+    {
+      "task": "P1_P15_P2_through_2015__GV__s1730__donor_P3__target_P4",
+      "target": "P4",
+      "total": 13,
+      "mature": 12
+    },
+    {
+      "task": "P1_P15_P2_through_2015__GV__s1731__donor_P4__target_P3",
+      "target": "P3",
+      "total": 13,
+      "mature": 12
+    },
+    {
+      "task": "P1_P15_P2_through_2015__GV__s1731__donor_P3__target_P4",
+      "target": "P4",
+      "total": 13,
+      "mature": 12
+    },
+    {
+      "task": "P1_P15_P3_through_2015__GV__s1729__donor_P4__target_P2",
+      "target": "P2",
+      "total": 13,
+      "mature": 12
+    },
+    {
+      "task": "P1_P15_P3_through_2015__GV__s1729__donor_P2__target_P4",
+      "target": "P4",
+      "total": 13,
+      "mature": 12
+    },
+    {
+      "task": "P1_P15_P3_through_2015__GV__s1730__donor_P4__target_P2",
+      "target": "P2",
+      "total": 13,
+      "mature": 12
+    },
+    {
+      "task": "P1_P15_P3_through_2015__GV__s1730__donor_P2__target_P4",
+      "target": "P4",
+      "total": 13,
+      "mature": 12
+    },
+    {
+      "task": "P1_P15_P3_through_2015__GV__s1731__donor_P4__target_P2",
+      "target": "P2",
+      "total": 13,
+      "mature": 12
+    },
+    {
+      "task": "P1_P15_P3_through_2015__GV__s1731__donor_P2__target_P4",
+      "target": "P4",
+      "total": 13,
+      "mature": 12
+    },
+    {
+      "task": "P1_P15_P4_through_2015__GV__s1729__donor_P3__target_P2",
+      "target": "P2",
+      "total": 13,
+      "mature": 12
+    },
+    {
+      "task": "P1_P15_P4_through_2015__GV__s1729__donor_P2__target_P3",
+      "target": "P3",
+      "total": 13,
+      "mature": 12
+    },
+    {
+      "task": "P1_P15_P4_through_2015__GV__s1730__donor_P3__target_P2",
+      "target": "P2",
+      "total": 13,
+      "mature": 12
+    },
+    {
+      "task": "P1_P15_P4_through_2015__GV__s1730__donor_P2__target_P3",
+      "target": "P3",
+      "total": 13,
+      "mature": 12
+    },
+    {
+      "task": "P1_P15_P4_through_2015__GV__s1731__donor_P3__target_P2",
+      "target": "P2",
+      "total": 13,
+      "mature": 12
+    },
+    {
+      "task": "P1_P15_P4_through_2015__GV__s1731__donor_P2__target_P3",
+      "target": "P3",
+      "total": 13,
+      "mature": 12
+    },
+    {
+      "task": "P1_P2_P3_through_2015__GV__s1729__donor_P4__target_P15",
+      "target": "P15",
+      "total": 13,
+      "mature": 12
+    },
+    {
+      "task": "P1_P2_P3_through_2015__GV__s1729__donor_P15__target_P4",
+      "target": "P4",
+      "total": 13,
+      "mature": 12
+    },
+    {
+      "task": "P1_P2_P3_through_2015__GV__s1730__donor_P4__target_P15",
+      "target": "P15",
+      "total": 13,
+      "mature": 12
+    },
+    {
+      "task": "P1_P2_P3_through_2015__GV__s1730__donor_P15__target_P4",
+      "target": "P4",
+      "total": 13,
+      "mature": 12
+    },
+    {
+      "task": "P1_P2_P3_through_2015__GV__s1731__donor_P4__target_P15",
+      "target": "P15",
+      "total": 13,
+      "mature": 12
+    },
+    {
+      "task": "P1_P2_P3_through_2015__GV__s1731__donor_P15__target_P4",
+      "target": "P4",
+      "total": 13,
+      "mature": 12
+    },
+    {
+      "task": "P1_P2_P4_through_2015__GV__s1729__donor_P3__target_P15",
+      "target": "P15",
+      "total": 13,
+      "mature": 12
+    },
+    {
+      "task": "P1_P2_P4_through_2015__GV__s1729__donor_P15__target_P3",
+      "target": "P3",
+      "total": 13,
+      "mature": 12
+    },
+    {
+      "task": "P1_P2_P4_through_2015__GV__s1730__donor_P3__target_P15",
+      "target": "P15",
+      "total": 13,
+      "mature": 12
+    },
+    {
+      "task": "P1_P2_P4_through_2015__GV__s1730__donor_P15__target_P3",
+      "target": "P3",
+      "total": 13,
+      "mature": 12
+    },
+    {
+      "task": "P1_P2_P4_through_2015__GV__s1731__donor_P3__target_P15",
+      "target": "P15",
+      "total": 13,
+      "mature": 12
+    },
+    {
+      "task": "P1_P2_P4_through_2015__GV__s1731__donor_P15__target_P3",
+      "target": "P3",
+      "total": 13,
+      "mature": 12
+    },
+    {
+      "task": "P1_P3_P4_through_2015__GV__s1729__donor_P2__target_P15",
+      "target": "P15",
+      "total": 13,
+      "mature": 12
+    },
+    {
+      "task": "P1_P3_P4_through_2015__GV__s1729__donor_P15__target_P2",
+      "target": "P2",
+      "total": 13,
+      "mature": 12
+    },
+    {
+      "task": "P1_P3_P4_through_2015__GV__s1730__donor_P2__target_P15",
+      "target": "P15",
+      "total": 13,
+      "mature": 12
+    },
+    {
+      "task": "P1_P3_P4_through_2015__GV__s1730__donor_P15__target_P2",
+      "target": "P2",
+      "total": 13,
+      "mature": 12
+    },
+    {
+      "task": "P1_P3_P4_through_2015__GV__s1731__donor_P2__target_P15",
+      "target": "P15",
+      "total": 13,
+      "mature": 12
+    },
+    {
+      "task": "P1_P3_P4_through_2015__GV__s1731__donor_P15__target_P2",
+      "target": "P2",
+      "total": 13,
+      "mature": 12
+    },
+    {
+      "task": "P2_P3_P4_through_2015__GV__s1729__donor_P15__target_P1",
+      "target": "P1",
+      "total": 12,
+      "mature": 11
+    },
+    {
+      "task": "P2_P3_P4_through_2015__GV__s1729__donor_P1__target_P15",
+      "target": "P15",
+      "total": 13,
+      "mature": 12
+    },
+    {
+      "task": "P2_P3_P4_through_2015__GV__s1730__donor_P15__target_P1",
+      "target": "P1",
+      "total": 12,
+      "mature": 11
+    },
+    {
+      "task": "P2_P3_P4_through_2015__GV__s1730__donor_P1__target_P15",
+      "target": "P15",
+      "total": 13,
+      "mature": 12
+    },
+    {
+      "task": "P2_P3_P4_through_2015__GV__s1731__donor_P15__target_P1",
+      "target": "P1",
+      "total": 12,
+      "mature": 11
+    },
+    {
+      "task": "P2_P3_P4_through_2015__GV__s1731__donor_P1__target_P15",
+      "target": "P15",
+      "total": 13,
+      "mature": 12
+    }
+  ],
+  "nuisance_year": 2014,
+  "correction_year": 2015,
+  "context_dimension": 112,
+  "static_features": 113,
+  "nuisance_ridge": 0.01
+}

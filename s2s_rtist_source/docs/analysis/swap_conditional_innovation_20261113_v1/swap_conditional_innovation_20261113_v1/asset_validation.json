@@ -1,0 +1,13 @@
+{
+  "passed": true,
+  "models": 30,
+  "directions": 60,
+  "source_years": [
+    2014,
+    2015
+  ],
+  "evaluation_year": 2016,
+  "parent_assets_exact": true,
+  "target_2016_raw_context_added": true,
+  "local_real_compute_calls": 0
+}

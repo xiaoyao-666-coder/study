@@ -1,0 +1,36 @@
+{
+  "passed": true,
+  "numeric": {
+    "gradient_max_abs": 1.1329551879990518e-11,
+    "independent_solver_objective_difference": 4.860451277566291e-11,
+    "checkpoint_exact_resume": true,
+    "zero_reverse_anchor_and_tie": true,
+    "nuisance_independent_lstsq": true,
+    "constant_context_intercept": true
+  },
+  "pipeline": {
+    "directions": 60,
+    "stages": 180,
+    "actual_read_denial": true,
+    "seal_tamper_denial": true,
+    "full_synthetic_pipeline": true
+  },
+  "fixture": "C:\\Users\\LEGION\\AppData\\Local\\Temp\\model_matched_artificial_9u0vqsye",
+  "local_real_compute_calls": 0,
+  "python_310_syntax": true,
+  "code_sha256": {
+    "aggregate.py": "3a32ec74c3f12fbfab65129362b0e27a8ffdded4deb9ab6ef17dd2eefa215c16",
+    "bspline_basis.py": "26fef56dd5fb70e2de3a7feecc46bff2d5358f70d9c0ad06cb6d49142571fc4b",
+    "data.py": "c7c33cee5c74314e61fdf784a5031826f0aa0147abeb341d3dfb9537b1ce12c6",
+    "inference_model.py": "4a56bb9a45f1894df2eabbb47f78b47ccbdbc62b44f2bf5a9bf374429c77b41a",
+    "kernel.py": "9374fca050e881faed5e38e92be14f3513aa92c56b0912a0cc17f0097b1ee680",
+    "launch.py": "1ff3684ccfd542144c8e98a630af2e5d65fc4f7c0f17957484c517768d41c31e",
+    "optimizer.py": "3039f22234129bc87053c2f7a51a4019b0f18d6dd25e582c94fd700a441598c7",
+    "rootstate.py": "30b1d5b7fabdfbd6a7613822ad3fca26bb0172d3af3552b1de69cda45f30dfe3",
+    "run.py": "2d4174d1e281b72465c754ffee531ccb6bc78aab1b641ae71e2a55393d3770a4",
+    "runtime.py": "3b7cd019aa0d891c929a2cfd2fc59aed42f12127833288a0102e1e5e69fce264",
+    "schema.py": "9fae3756212041f0d8e89f0ea909e2d491037174c193ef6e8083ebcc4a1600a2",
+    "soil_features.py": "735454035c583598085f6830bf6f437ddbd3319740eb8538e7706ccee1208756",
+    "worker.py": "ade9233ebd570bf1b984082a92556a5c8606e05de3ff9d3f5fde93bba1ab4ad6"
+  }
+}
